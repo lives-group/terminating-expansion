@@ -88,5 +88,7 @@ Some questions to be answered
 
 1. Does it need to have two different classes for functions?
    - How can we call a total function inside a total function?
+      * Probably we can just expand them normally passing the current 
+        recursion counter.
    - Can we call an unrestricted function inside a total one?
    
