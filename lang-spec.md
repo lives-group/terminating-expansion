@@ -6,8 +6,8 @@ Introduction
 
 In this draft, we outline the ideas of a core programming language featuring 
 a type based termination criteria. The main novelty of the language design is 
-its elaboration that unfolds a function call into a term that has a pattern 
-matching ... FINISH THIS DESCRIPTION 
+its elaboration that unfolds a function call into a term that has a *exaustive* pattern 
+matching ... over the original arguments and an additional counter, limiting the recusrive call expansion to any specific nonnegative number. This unrolling is needed for the purposes of compiling for eBPF, since it does not allow non-terminating functions to run (and that’s why it does not allow unbounded loops or general recursion).
 
 
 Syntax 
