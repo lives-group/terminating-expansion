@@ -125,4 +125,26 @@ case (cons 1 (cons 2 (cons 3 (cons 4 nil)))) of {cons 1 (cons 2 (cons 3 (cons 4 
 ...
 ```
 
-The expansion is tiring but possible, no major problems found. We would need the list size as the recursion counter. But what if the function was to find the number of prime divisors of a number? This function would need to be recursive (potentially total tho), and it would need to expand inside each expansion step above. The expansion tree can grow exponentially large when recursive functions are used inside our defined recursive functions and require for really large counters. If our argument function is the sum of the results of two recursive functions applied to the same argument, could they expand in parallel? Or will we need an even greater counter? I think we could pass the same counter to both, but we would still need a huge counter, depending (exponentially) on the most expensive function.
+```
+map (+1) [1, 2, 3, 4] 5
+~
+map (+1) [2, 3, 4] 4
+~
+map (+1) [3, 4] 3
+~
+map (+1) [4] 2
+~
+map (+1) [] 1
+~
+evaluation completed
+```
+
+The expansion is tiring but possible, no major problems found. We would need the at least the successor of the list size as the recursion counter. But what if the function was to find the number of prime divisors of a number? This function would need to be recursive (potentially total tho), and it would need to expand inside each expansion step above. The expansion tree can grow exponentially large when recursive functions are used inside our defined recursive functions and require for really large counters. If our argument function is the sum of the results of two recursive functions applied to the same argument, could they expand in parallel? Or will we need an even greater counter? I think we could pass the same counter to both, but we would still need a huge counter, depending (exponentially) on the most expensive function.
+
+Consider `h` the function that takes an integer `x` and return the sum of two total recursive functions `f` and `g`, both applied to `x`.
+
+```
+map h [1, 2, 3, 4, 5, 6, 7, 8] counter
+```
+
+The counter should be at least the sucessor of the list size multiplied by greater between the minimum possible counter for `f` and for `g`, considering we allow “parallel” expansion. If inside `f` or `g` makes a call to another total recursive function, our counter should be still greater. It has the potential to grow astronomically large.
