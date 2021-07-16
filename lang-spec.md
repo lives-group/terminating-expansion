@@ -89,9 +89,15 @@ Some questions to be answered
 1. Does it need to have two different classes for functions?
    - How can we call a total function inside a total function?
       * Probably we can just expand them normally passing the current 
-        recursion counter.
+        recursion counter. (maycon) But this can grow exponentially large, as I informally show in the draft.
    - Can we call an unrestricted function inside a total one?
-      * (maycon) if unrestricted functions only call total ones, they cannot call themselves, thus they cannot be recursive. But they would be trivially terminating, so  *a priori* it is no problem to call them inside total functions. If we allow unrestricted functions to call unrestricted ones, we would be allowing unlimited recursion, and would be turing complete (undesirable). So I think we should not have two classes for functions.
+      * (maycon) if unrestricted functions only call total ones, they cannot call themselves, thus they cannot be recursive. But they would be trivially terminating, so  *a priori* it is no problem to call them inside total functions. If we allow unrestricted functions to call unrestricted ones, we would be allowing unlimited recursion, and would be turing complete (undesirable). But thinking more deeply, if we allow total functions to call unrestricted functions, we would get to define mutually recursive functions between total and unrestricted. See the example below. Given all this, I think we should not have two classes for functions.
+
+      ```
+      def f = lambda x . g[x]
+      total g = lambda x . f x
+      ```
+      With this example, we shouldn’t allow unrestricted calls inside total functions. But I also don’t see how we could typecheck and guarantee `g` to be total if it has a call to a unchecked function (`f`). 
    
 Maycon’s Draft
 ===
