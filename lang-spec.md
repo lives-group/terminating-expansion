@@ -91,4 +91,32 @@ Some questions to be answered
       * Probably we can just expand them normally passing the current 
         recursion counter.
    - Can we call an unrestricted function inside a total one?
+      * (maycon) if unrestricted functions only call total ones, they cannot call themselves, thus they cannot be recursive. But they would be trivially terminating, so  *a priori* it is no problem to call them inside total functions. If we allow unrestricted functions to call unrestricted ones, we would be allowing unlimited recursion, and would be turing complete (undesirable). So I think we should not have two classes for functions.
    
+Maycon’s Draft
+===
+Trying to define some basic functions over lists. Our language does not contain polymorphism, so I cannot define `list a` for all `a`. Let’s work with an assumed `listC` instead, with constructors `nil` and `cons C listC`. Remember that `C` can be defined as synonym of any specific type, so our definition will work for arbitrary types without negative occurences, but it won’t be *general* in the polymorphism sense.
+
+map
+---
+Without polymorphism, let’s work with total functions from `C` to `C`, our previously defined synonym.
+$$
+\text{total map} = \lambda f : C \rightarrow C.\lambda x 
+: \text{listC}. \text{ case } x \text{ of } 
+\{\text{nil} \rightarrow \text{nil}, \text{cons }
+p \: s \rightarrow \text{cons } (f[p]) \: (\text{map } [f \: s])\} 
+$$
+
+Let’s expand the execution for a list of ints and successor function. Assume `+1` is written as $\lambda x : \text{int} . x+1$.
+
+```
+map (+1) (cons 1 (cons 2 (cons 3 (cons 4 nil))))
+~
+case of (cons 1 (cons 2 (cons 3 (cons 4 nil)))) {cons 1 (cons 2 (cons 3 (cons 4 nil))) -> cons (1+1) (map [(+1) (cons 2 (cons 3 (cons 4 nil)))])}
+~
+case (cons 1 (cons 2 (cons 3 (cons 4 nil)))) of {cons 1 (cons 2 (cons 3 (cons 4 nil))) -> cons (1+1) (case (cons 2 (cons 3 (cons 4 nil))) of 
+{cons 2 (cons 3 (cons 4 nil)) -> map [(+1) (cons 3 (cons 4 nil))]})}
+...
+```
+
+The expansion is tiring but possible, no major problems found. We would need the list size as the recursion counter. But what if the function was to find the number of prime divisors of a number? This function would need to be recursive (potentially total tho), and it would need to expand inside each expansion step above. The expansion tree can grow exponentially large when recursive functions are used inside our defined recursive functions and require for really large counters. If our argument function is the sum of the results of two recursive functions applied to the same argument, could they expand in parallel? Or will this exponential grow be this awful? [tomorrow I'll try more]
