@@ -194,6 +194,60 @@ para o reino das linguagens funcionais? Nossos programas são expressões e as c
 não estão em sequências de comandos. Ou será que é possível forçar um exemplo em que isso aconteça?
 Se o problema de fato não nos afeta, não é preciso pensar em fusão.
 
+Bom, na verdade, afeta sim! Tome o exemplo abaixo (pensei nele enquanto tomava banho), 
+que calcula a quantidade de números pares numa lista usando uma abordagem de 
+divisão e conquista que usa um parâmetro para determinar
+se cairá no caso base ou não:
+
+> ex4 :: [Int] -> Int -> Int
+> ex4 ls n = case n of
+>              0 -> length $ filter even ls
+>              s -> ex4 (take (div n 2) ls) (div n 2) + 
+>                   ex4 (drop (div n 2) ls) (div n 2) 
+
+Fazendo um passo de expansão dessa função teremos:
+
+> ex4' :: [Int] -> Int -> Int
+> ex4' ls n = case n of
+>               1 -> length $ filter even ls
+>               s -> (case (div n 2) of 
+>                       0  -> length $ filter even (take (div n 2) ls)
+>                       s1 -> ex4' (take (div (div n 2) 2) 
+>                                    (take (div n 2) ls)) (div (div n 2) 2) + 
+>                             ex4' (drop (div (div n 2) 2) 
+>                                    (take (div n 2) ls)) (div (div n 2) 2)
+>                    ) +  
+>                    (case (div n 2) of 
+>                       0  -> length $ filter even (drop (div n 2) ls)
+>                       s1 -> ex4' (take (div (div n 2) 2) 
+>                                    (drop (div n 2) ls)) (div (div n 2) 2) + 
+>                             ex4' (drop (div (div n 2) 2) 
+>                                    (drop (div n 2) ls)) (div (div n 2) 2)
+>                    ) 
+
+Os dois cases mais internos testam a mesma condição! Uma fusão seria produzir a 
+seguinte função a partir de `ex4'`:
+
+> ex4'' :: [Int] -> Int -> Int
+> ex4'' ls n = case n of
+>               1 -> length $ filter even ls
+>               s -> case (div n 2) of 
+>                       0  -> (length $ filter even (take (div n 2) ls)) +
+>                             (length $ filter even (drop (div n 2) ls))
+>                       s1 -> (ex4'' (take (div (div n 2) 2) 
+>                                    (take (div n 2) ls)) (div (div n 2) 2) + 
+>                             ex4'' (drop (div (div n 2) 2) 
+>                                    (take (div n 2) ls)) (div (div n 2) 2)) +
+>                             (ex4'' (take (div (div n 2) 2) 
+>                                    (drop (div n 2) ls)) (div (div n 2) 2) + 
+>                             ex4'' (drop (div (div n 2) 2) 
+>                                    (drop (div n 2) ls)) (div (div n 2) 2))
+
+Apesar de parecer algo um pouco mais específico, será sim necessário cobrir 
+fusão condicional. Note que eu usamos `case of` na condicional para evitar 
+introduzir o `if then else`. Casamento de padrão também funciona sobre constantes
+então não há problema nisso.
+
 Rerolling de Recursão
 ---
 
@@ -210,9 +264,9 @@ o fator de expansão, qualquer chamada recursiva futura seria substituída com u
 ou possivelmente com uma mônada. Já que não há mais chamadas recursivas, o monadification
 não seria mais uma abordagem tão complicada.
 
-Conclusão
+Conclusões Preliminares
 ---
 
-Implementar o algoritmo de inlining! O artigo tem uma descrição “imperativa“ de como fazer 
-isso. Mas tentarei fazer isso em Haskell. Precisarei definir uma linguagem simples para trabalhar 
-direto com a AST, *parsing* nesse momento nem pensar. Let’s call it a day!
+Implementar o algoritmo de inlining e também o de fusão condicional! O artigo tem descrições 
+“imperativas“ de como fazê-los. Mas tentarei fazer isso em Haskell. Precisarei definir uma 
+linguagem simples para trabalhar direto com a AST, *parsing* nesse momento nem pensar.
