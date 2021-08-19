@@ -270,3 +270,90 @@ Conclusões Preliminares
 Implementar o algoritmo de inlining e também o de fusão condicional! O artigo tem descrições 
 “imperativas“ de como fazê-los. Mas tentarei fazer isso em Haskell. Precisarei definir uma 
 linguagem simples para trabalhar direto com a AST, *parsing* nesse momento nem pensar.
+
+Tentando Implementar
+---
+
+Vamos definir uma linguagem simples para tentar implementar o algoritmo de inlining.
+Não nos preocuparemos com parsing ou aspectos concretos da sintaxe. Os exemplos serão 
+esboçados à mão como ASTs válidas, se necessário. Nossa linguagem é um $\lambda$-cálculo
+simples com duas novas construções: uma para definir uma expressão a um nome e uma para 
+invocar a expressão definida por um nome. Isso tornará mais simples modelar a recursão, 
+sem usar ponto fixo e combinadores.
+
+> type VarName  = String
+> type FuncName = String
+> type Value    = Int
+
+> data Exp = Const Value
+>          | Var VarName
+>          | Abs VarName Exp
+>          | App Exp Exp
+>          | Def FuncName Exp
+>          | Call FuncName
+>          deriving (Eq, Show)
+
+> exampleProgram :: Exp
+> exampleProgram = Def "A" (Abs "x" (App (Call "B") (App (Call "A") (Var "x"))))
+
+O nosso algoritmo de inlining supõe que a AST de entrada começa com um `Def` e que 
+possui ao menos uma chamada recursiva. Temos aqui uma versão que parece funcionar!
+É preciso sempre fazer inline de $f_{m-1}$ em $f$ para obter $f_m$ para que o 
+crescimento de código não seja super-exponencial. Executar `expandN` sobre o 
+`exampleProgram` aumentará o numero de aplicações da função hipotética `B`
+deixando uma última chamada recursiva ao final. Podemos substituir essa última chamada 
+recursiva com o erro de `provide more fuel` e a primeira parte do problema está resolvida!
+
+> {-- Expande N vezes --}
+> expandN :: Exp -> Int -> Exp
+> expandN f 0 = f
+> expandN f 1 = expandOnce f
+> expandN f m = inline f1 f2
+>   where (f1, f2) = mutualize f (expandN f (m-1))
+
+> {-- expande 1 vez --}
+> expandOnce :: Exp -> Exp
+> expandOnce (Def n f) = inline f1 f2
+>    where
+>      (f1, f2) = mutualize (Def n f) (changeFuncName (Def n f) (n ++ "_")) 
+
+> {-- Modifica o nome de uma função --}
+> changeFuncName :: Exp -> FuncName -> Exp
+> changeFuncName (Def n f) n' = Def n' (inlSubs f n n')  
+> changeFuncName _ _ = error "not a named func"
+
+> {-- cria versões mutualmente rec de funcoes equivalentes --}
+> mutualize :: Exp -> Exp -> (Exp, Exp)
+> mutualize (Def n1 f1) (Def n2 f2) = ( (Def n1 (inlSubs f1 n1 n2)) ,
+>                                       (Def n2 (inlSubs f2 n2 n1)) )
+> mutualize _ _ = error "s n h"
+
+> {-- faz inlining do segundo no primeiro --}
+> inline :: Exp -> Exp -> Exp
+> inline (Def n1 f1) (Def n2 f2) = Def n1 (inline' (n1, f1) (n2, f2))
+> inline _ _ = error "funções nomeadas pls"
+
+> {-- substitui chamadas de fo pra ft --}
+> inlSubs :: Exp -> FuncName -> FuncName -> Exp
+> inlSubs (Call n) fo ft
+>   | n == fo   = Call ft
+>   | otherwise = Call n
+> inlSubs (Abs v e) fo ft   = Abs v (inlSubs e fo ft)
+> inlSubs (App e1 e2) fo ft = App (inlSubs e1 fo ft) 
+>                                 (inlSubs e2 fo ft)
+> inlSubs (Def _ _) _ _     = error "should not happen"
+> inlSubs e _ _ = e
+
+> {-- faz o inlining de f2 em f1 --}
+> inline' :: (FuncName, Exp) -> (FuncName, Exp) -> Exp
+> inline' (_, (Def _ _)) _ = error "s n h"
+> inline' _ (_, (Def _ _)) = error "s n h"
+> inline' (n1, (Call n')) (n2, f2)
+>    | n' == n2  = f2
+>    | otherwise = Call n'
+> inline' (n1, (Abs v e1)) (n2, f2) = Abs v (inline' (n1, e1) (n2, f2))
+> inline' (n1, (App e1 e2)) (n2, f2) = App (inline' (n1, e1) (n2, f2))
+>                                          (inline' (n1, e2) (n2, f2))
+> inline' (n1, f1) (n2, f2) = f1
+
+Precisamos agora realizar a fusão condicional.
