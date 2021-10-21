@@ -5,8 +5,6 @@ We made some adaptations following PLFA by Kokke & Wadler
 
 module PCF.Syntax where
 
--- Agda Stdlib 1.7
-open import Data.String using (String)
 open import Common.Name using (Name)
 open import Common.Type using (Type)
 
