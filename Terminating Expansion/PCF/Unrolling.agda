@@ -63,10 +63,10 @@ does nothing if not fix
 --}
 expand : ℕ → Term → Term
 expand 0       t         = t
-expand 1       (fix v t) = inline (fix v (renameVar t v v₁)) v₁ (fix v₁ t)
+expand 1       (fix v t) = inline (fix v (renameVar t v v₁)) v₁ t
     where
         v₁ = newName v
-expand (suc n) (fix v t) = inline (fix v (renameVar t v v₁)) v₁ (fix v₁ (expand n (fix v t)))
+expand (suc n) (fix v t) = inline (fix v (renameVar t v v₁)) v₁ (expand n (fix v t))
     where 
         v₁ = newName v
 expand _       t         = t
