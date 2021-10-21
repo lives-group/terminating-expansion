@@ -1,5 +1,8 @@
 module PCF.Examples where
 
+open import Common.Name
+open import Common.Type
+open import Common.Context
 open import PCF.Syntax
 open import PCF.TypeSystem
 
