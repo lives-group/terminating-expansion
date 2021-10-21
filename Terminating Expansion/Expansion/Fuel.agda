@@ -7,6 +7,7 @@ to ensure termination.
 
 module Expansion.Fuel where
 
+-- Agda Stdlib 1.7
 open import Data.Nat using (ℕ; zero; suc)
 
 Fuel : Set
