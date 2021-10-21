@@ -3,19 +3,12 @@ PCF’s Syntax following doi:10.1006/inco.2000.2917
 We made some adaptations following PLFA by Kokke & Wadler 
 --}
 
-module Syntax where
+module PCF.Syntax where
 
 -- Agda Stdlib 1.7
 open import Data.String using (String)
-
-Name : Set
-Name = String
-
-infixr 15 _⇒_
-
-data Type : Set where
-    nat  : Type
-    _⇒_  : Type → Type → Type
+open import Common.Name using (Name)
+open import Common.Type using (Type)
 
 data Term : Set where
     ufn : Term -- undefined term

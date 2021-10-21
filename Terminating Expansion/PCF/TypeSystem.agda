@@ -1,14 +1,9 @@
-module TypeSystem where
+module PCF.TypeSystem where
 
-open import Syntax 
-
-data Context : Set where
-    ø : Context
-    _,_⦂_ : Context → Name → Type → Context
-
-data _⦂_∈_ : Name → Type → Context → Set where
-    here  : ∀{v τ Γ} → v ⦂ τ ∈ (Γ , v ⦂ τ)
-    there : ∀{v v' τ τ' Γ} → v ⦂ τ ∈ Γ → v ⦂ τ ∈ (Γ , v' ⦂ τ')
+open import PCF.Syntax 
+open import Common.Context
+open import Common.Name
+open import Common.Type
 
 data _⊢_⦂_ : Context → Term → Type → Set where
     tufn : ∀{Γ}     → Γ ⊢ ufn ⦂ nat 

@@ -1,7 +1,7 @@
-module Examples where
+module PCF.Examples where
 
-open import Syntax
-open import TypeSystem
+open import PCF.Syntax
+open import PCF.TypeSystem
 
 infixl 18 _∙_
 
