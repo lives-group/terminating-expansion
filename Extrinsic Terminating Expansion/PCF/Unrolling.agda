@@ -39,13 +39,13 @@ countNames (trm t)   = countNames' t
 countNames (fix v t) = 1 + countNames' t
 
 newName' : Term → ℕ → Name
-newName' t (suc n) with name-is-used t ("x" ++ show n)
-...                | true = newName' t n
-...                | false = "x" ++ show n
 newName' t 0 = "x0"
+newName' t (suc n) with name-is-used t ("x" ++ show (suc n))
+...                | true = newName' t n
+...                | false = "x" ++ show (suc n)
 
 newName : Term → Name
-newName t = newName' t (1 + countNames t)
+newName t = newName' t (countNames t)
 
 {--
 Change calls from one name to other name
