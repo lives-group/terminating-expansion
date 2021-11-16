@@ -5,8 +5,11 @@ open import Common.Context
 open import Common.Name
 open import PCF.Syntax
 open import PCF.Syntax.Properties
+open import PCF.Syntax.Unrolling
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary using (¬_)
 open import Data.Unit using (⊤)
+open import Data.Nat using (ℕ)
 
 -- Syntatic Sugar for function application
 infixl 20 _∙_
@@ -134,32 +137,80 @@ mutualLoop' = let´ "loop1" ← abs "f"
 {-
 I can prove that loop3 is the only recursive function above
 -}
-
-ev1 : ¬ ("loop2" equals "f")
-ev1 ()
-
-ev2 : ¬ ("loop2" equals "x")
-ev2 ()
-
-ev3 : ¬ ("loop1" equals "f")
-ev3 ()
-
-ev4 : ¬ ("loop1" equals "x")
-ev4 ()
-
-only-loop3-rec : mutualLoop' ▸rec (ø , "loop3" ⦂ nat ⇒ nat)
+only-loop3-rec : mutualLoop' ▸rec (ø , "loop3" ⦂ nat ⇒ nat) [ 1 ]
 only-loop3-rec = no-rec-⇑
                      (no-rec-⇑
                           (rec-⇑ no-rec-⇓
-                           (call-app2 (call-app2 call-var)))
-                      (no-call-abs (no-call-abs (no-call-app (no-call-var ev1 ) (no-call-var ev2)))))
-                 (no-call-abs (no-call-abs (no-call-app (no-call-var ev3) (no-call-var ev4))))
+                           (call-app2 (no-call-varn loop3≢loop2)
+                                      (call-app2
+                                         (no-call-varn loop3≢loop1)
+                                           call-var)))
+                      (no-call-abs (no-call-abs (no-call-app
+                         (no-call-varn loop2≢f)
+                           (no-call-varn loop2≢x)))))
+                 (no-call-abs (no-call-abs (no-call-app
+                                              (no-call-varn loop1≢f)
+                                              (no-call-varn loop1≢x))))
+  where
+    loop2≢f : ¬ ("loop2" ≡ "f")
+    loop2≢f ()
+
+    loop2≢x : ¬ ("loop2" ≡ "x")
+    loop2≢x ()
+
+    loop1≢f : ¬ ("loop1" ≡ "f")
+    loop1≢f ()
+
+    loop1≢x : ¬ ("loop1" ≡ "x")
+    loop1≢x ()
+
+    loop3≢loop2 : ¬ ("loop3" ≡ "loop2")
+    loop3≢loop2 ()
+
+    loop3≢loop1 : ¬ ("loop3" ≡ "loop1")
+    loop3≢loop1 ()
 
 {-
-But I can prove sum is recursive indeed
+and I can prove sum is indeed recursive (and the only one)
 -}
-sum-is-recursive : sum ▸rec (ø , "sum" ⦂ nat ⇒ nat ⇒ nat)
-sum-is-recursive = rec-⇑ no-rec-⇓ (call-abs (call-abs (call-mtc3 (call-app1 (call-app1 call-var)))))
+sum-is-recursive : sum ▸rec (ø , "sum" ⦂ nat ⇒ nat ⇒ nat) [ 1 ]
+sum-is-recursive = rec-⇑ no-rec-⇓ (call-abs (call-abs (call-mtc3
+                        (no-call-varn sum≢x1 )
+                        (no-call-varn sum≢x2 )
+                        (call-app1 (call-app1
+                                      call-var
+                                      (no-call-varn sum≢x3))
+                                   (no-call-suc
+                                      (no-call-varn sum≢x2))))))
+  where
+    sum≢x1 : ¬ ("sum" ≡ "x1")
+    sum≢x1 ()
+
+    sum≢x2 : ¬ ("sum" ≡ "x2")
+    sum≢x2 ()
+
+    sum≢x3 : ¬ ("sum" ≡ "x3")
+    sum≢x3 ()
+
+{-
+As long as the type is different,
+variables with same name won't cause confusion.
+For example, at first glance the function
+"x" below seems recursive, but I can prove
+it actually isn't.
+-}
+ex-term : ø , "x" ⦂ nat , "sum" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⇒ nat ⊚ ⇑
+ex-term = let´ "x" ← (var "sum" (there here))
+                     ∙ (var "x" (there (there here)))
+          in´ (var "x" here )
+
+dif-type : ex-term ▸rec ø [ 0 ]
+dif-type = no-rec-⇑ no-rec-⇓ (no-call-app (no-call-varn x≢sum) (no-call-vart n≢nn))
+  where
+    x≢sum : ¬ ("x" ≡ "sum")
+    x≢sum ()
+    n≢nn  : ¬ (nat ⇒ nat ≡ nat)
+    n≢nn ()
 
 {-
 With context substitution we can use already defined
@@ -170,3 +221,30 @@ two = suc (suc zer)
 
 f-on-context : ø , "f" ⦂ nat ⇒ nat ⊢´ nat ⊚ ⇓
 f-on-context = var "f" here ∙ context-substitution (drop empty) two
+
+{-
+Inline a function into another is essential to
+the recursion expansion.
+-}
+-- inl-f1 : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇓
+-- inl-f1 = abs "x" (abs "y" (var "y" here))
+--
+-- inl-f2 : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
+-- inl-f2 = var "f1" here
+--           ∙ zer
+--           ∙ (var "f1" here
+--              ∙ zer
+--              ∙ zer)
+--
+-- f1-called-in-f2 : "f1" ⦂ nat ⇒ nat ⇒ nat called-in inl-f2
+-- f1-called-in-f2 = {!   !}
+--
+-- right-answer : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
+-- right-answer = abs "x" (abs "y" (var "y" here))
+--                ∙ zer
+--                ∙ (abs "x" (abs "y" (var "y" here))
+--                   ∙ zer
+--                   ∙ zer)
+--
+-- inlining-test : inline f1-called-in-f2 inl-f1 (drop empty) ≡ right-answer
+-- inlining-test = refl
