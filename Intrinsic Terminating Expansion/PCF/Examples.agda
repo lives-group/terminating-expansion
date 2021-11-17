@@ -226,25 +226,114 @@ f-on-context = var "f" here ∙ context-substitution (drop empty) two
 Inline a function into another is essential to
 the recursion expansion.
 -}
--- inl-f1 : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇓
--- inl-f1 = abs "x" (abs "y" (var "y" here))
---
--- inl-f2 : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
--- inl-f2 = var "f1" here
---           ∙ zer
---           ∙ (var "f1" here
---              ∙ zer
---              ∙ zer)
---
--- f1-called-in-f2 : "f1" ⦂ nat ⇒ nat ⇒ nat called-in inl-f2
--- f1-called-in-f2 = {!   !}
---
--- right-answer : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
--- right-answer = abs "x" (abs "y" (var "y" here))
---                ∙ zer
---                ∙ (abs "x" (abs "y" (var "y" here))
---                   ∙ zer
---                   ∙ zer)
---
--- inlining-test : inline f1-called-in-f2 inl-f1 (drop empty) ≡ right-answer
--- inlining-test = refl
+inl-f1 : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇓
+inl-f1 = abs "x" (abs "y" (var "y" here))
+
+inl-f2 : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
+inl-f2 = var "f1" here
+          ∙ zer
+          ∙ (var "f1" here
+             ∙ zer
+             ∙ zer)
+
+f1-called-in-f2 : "f1" ⦂ nat ⇒ nat ⇒ nat called-in inl-f2
+f1-called-in-f2 = call-app12
+                    (call-app1
+                      call-var
+                      no-call-zer
+                    )
+                    (call-app1
+                      (call-app1
+                        call-var
+                        no-call-zer
+                      )
+                      no-call-zer
+                    )
+
+right-answer-inline : ø , "f1" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⊚ ⇓
+right-answer-inline = abs "x" (abs "y" (var "y" here))
+               ∙ zer
+               ∙ (abs "x" (abs "y" (var "y" here))
+                  ∙ zer
+                  ∙ zer)
+
+_ : inline f1-called-in-f2 inl-f1 (drop empty) ≡ right-answer-inline
+_ = refl
+
+{-
+We can expand terms if we can prove
+they call the var we are saying they
+represent.
+-}
+exp-example : ø , "sum" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇓
+exp-example = (abs "x1"
+                (abs "x2"
+                  match var "x1" (there here)
+                    [z⇨ var "x2" here
+                     suc "x3" ⇨ var "sum" (there (there (there here)))
+                                ∙ var "x3" here
+                                ∙ suc (var "x2" (there here))
+                    ]
+                )
+              )
+
+sum-called-in-exp-example : "sum" ⦂ nat ⇒ nat ⇒ nat called-in exp-example
+sum-called-in-exp-example = call-abs
+                             (call-abs
+                               (call-mtc3
+                                 (no-call-varn sum≢x1)
+                                 (no-call-varn sum≢x2)
+                                 (call-app1
+                                   (call-app1
+                                     call-var
+                                     (no-call-varn sum≢x3)
+                                   ) (no-call-suc
+                                       (no-call-varn sum≢x2)
+                                     )
+                                 )
+                               )
+                              )
+  where
+    sum≢x1 : ¬ ("sum" ≡ "x1")
+    sum≢x1 ()
+
+    sum≢x2 : ¬ ("sum" ≡ "x2")
+    sum≢x2 ()
+
+    sum≢x3 : ¬ ("sum" ≡ "x3")
+    sum≢x3 ()
+
+right-answer-expand-once : ø , "sum" ⦂ nat ⇒ nat ⇒ nat ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇓
+right-answer-expand-once = abs "x1"
+                            (abs "x2"
+                             match var "x1" (there here) [z⇨ var "x2" here suc "x3" ⇨
+                             app
+                             (app
+                              (abs "x1"
+                               (abs "x2"
+                                match var "x1" (there here) [z⇨ var "x2" here suc "x3" ⇨
+                                app
+                                (app
+                                 (var "sum" (there (there (there (there (there (there here)))))))
+                                 (var "x3" here))
+                                (suc (var "x2" (there here)))
+                                ]))
+                              (var "x3" here))
+                             (suc (var "x2" (there here)))
+                             ])
+
+_ : extract (expand-once sum-called-in-exp-example) ≡ right-answer-expand-once
+_ = refl
+
+_ : extractExpansion (expand sum-called-in-exp-example (gas 1)) ≡ right-answer-expand-once
+_ = refl
+
+vf : VecFuel 1
+vf = gas 1 ∷ []
+
+right-answer-unroll : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇑
+right-answer-unroll = let´ "sum" ← right-answer-expand-once
+                        in´ var "sum" here
+
+_ : unroll sum-is-recursive vf ≡ right-answer-unroll
+_ = refl

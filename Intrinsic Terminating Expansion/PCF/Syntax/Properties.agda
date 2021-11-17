@@ -137,3 +137,53 @@ context-substitution p (let´ v ← t in´ t₁) = let´ v ← context-substitut
 ⊆-refl : ∀{Γ} → Γ ⊆ Γ
 ⊆-refl {ø} = empty
 ⊆-refl {Γ , x ⦂ x₁} = keep ⊆-refl
+
+{-
+The next two theorems prove that
+Context Substitution doesn't change
+variable calls
+-}
+no-call-preserving : ∀{Γ Δ v τ₁ τ₂}{t : Δ ⊢´ τ₂ ⊚ ⇓}
+                     (r : Δ ⊆ Γ)
+                     → v ⦂ τ₁ not-called-in t
+                     → v ⦂ τ₁ not-called-in (context-substitution r t)
+no-call-preserving r no-call-zer = no-call-zer
+no-call-preserving r (no-call-varn x) = no-call-varn x
+no-call-preserving r (no-call-vart x) = no-call-vart x
+no-call-preserving r (no-call-suc p) = no-call-suc (no-call-preserving r p)
+no-call-preserving r (no-call-abs p) = no-call-abs (no-call-preserving (keep r) p)
+no-call-preserving r (no-call-app p p₁)
+  = no-call-app (no-call-preserving r p) (no-call-preserving r p₁)
+no-call-preserving r (no-call-match p p₁ p₂)
+  = no-call-match (no-call-preserving r p) (no-call-preserving r p₁) (no-call-preserving (keep r) p₂)
+
+call-preserving : ∀{Γ Δ v τ₁ τ₂}{t : Δ ⊢´ τ₂ ⊚ ⇓}
+                  (r : Δ ⊆ Γ)
+                  → v ⦂ τ₁ called-in t
+                  → v ⦂ τ₁ called-in (context-substitution r t)
+call-preserving r call-var
+  = call-var
+call-preserving r (call-suc p)
+  = call-suc (call-preserving r p)
+call-preserving r (call-abs p)
+  = call-abs (call-preserving (keep r) p)
+call-preserving r (call-app1 p x)
+  = call-app1 (call-preserving r p) (no-call-preserving r x)
+call-preserving r (call-app2 x p)
+  = call-app2 (no-call-preserving r x) (call-preserving r p)
+call-preserving r (call-app12 p p₁)
+  = call-app12 (call-preserving r p) (call-preserving r p₁)
+call-preserving r (call-mtc1 p x x₁)
+  = call-mtc1 (call-preserving r p) (no-call-preserving r x) (no-call-preserving (keep r) x₁)
+call-preserving r (call-mtc2 x p x₁)
+  = call-mtc2 (no-call-preserving r x) (call-preserving r p) (no-call-preserving (keep r) x₁)
+call-preserving r (call-mtc3 x x₁ p)
+  = call-mtc3 (no-call-preserving r x) (no-call-preserving r x₁) (call-preserving (keep r) p)
+call-preserving r (call-mtc12 p p₁ x)
+  = call-mtc12 (call-preserving r p) (call-preserving r p₁) (no-call-preserving (keep r) x)
+call-preserving r (call-mtc13 p x p₁)
+  = call-mtc13 (call-preserving r p) (no-call-preserving r x) (call-preserving (keep r) p₁)
+call-preserving r (call-mtc23 x p p₁)
+  = call-mtc23 (no-call-preserving r x) (call-preserving r p) (call-preserving (keep r) p₁)
+call-preserving r (call-mtc123 p p₁ p₂)
+  = call-mtc123 (call-preserving r p) (call-preserving r p₁) (call-preserving (keep r) p₂)
