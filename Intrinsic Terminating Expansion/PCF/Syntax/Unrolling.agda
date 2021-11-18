@@ -3,6 +3,7 @@ module PCF.Syntax.Unrolling where
 open import Common.Type
 open import Common.Context
 open import Common.Name
+open import Common.Depth using (Depth; ⇑; ⇓)
 open import PCF.Syntax
 open import PCF.Syntax.Properties
 open import Relation.Nullary using (¬_)
@@ -122,39 +123,3 @@ unroll {Γ} {Δ} {v} {ρ} {τ} {τ'} {zero} {t} {t'} (rec-⇑ r x) (f ∷ [])
   = let´ v ← extractExpansion (expand x f) in´ t'
 unroll {Γ} {Δ} {v} {⇑} {τ} {τ'} {suc n} {t} {let´ v₁ ← t' in´ t''} (rec-⇑ r x) (f ∷ fs)
   = let´ v ← extractExpansion (expand x f) in´ unroll r fs
-
-
------ TRASH CAN ----------------
--- first  : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{p : v ⦂ τ called-in t}
---          → p expands-to (expand-once p) in´ 1 steps
-
--- extractN : ∀{Γ τ v n}{t t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{p₁ : v ⦂ τ called-in t}{p₂ : v ⦂ τ called-in t'}
---            → p₁ expands-to p₂ in´ n steps → ℕ
--- extractN {_} {_} {_} {n} {_} {_} {_} {_} _ = n
-
--- data Expansion : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓} → v ⦂ τ called-in t → ℕ → Set where
---   just-once : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{p : v ⦂ τ called-in t}
---               (ps : v ⦂ τ called-in (inline p t ⊆-refl))
---               → Expansion p 1
---   once-more : ∀{Γ τ v n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{p : v ⦂ τ called-in t}
---               → Expansion p n
---               → (ps : v ⦂ τ called-in (inline p t ⊆-refl))
---               → Expansion p (suc n)
-
--- expand : ∀{Γ v τ n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}(p : v ⦂ τ called-in t)
---          → Fuel n → Expansion p n
--- expand p last    = just-once (expand-once p)
--- expand p (gas f) with expand p f
--- ... | just-once ps   = once-more {p = ps} ? {!   !}
--- ... | once-more x ps = {!   !}
-
--- expand p last
---   = just-once {p = p} (expand-once p)
--- expand p (gas f)
---   = once-more {p = p} (inductively-expand p (expand-once p)) (expand p f)
---
-
---
--- make-fuel : (n : ℕ) → Fuel (suc n)
--- make-fuel 0       = last
--- make-fuel (suc n) = gas (make-fuel n)

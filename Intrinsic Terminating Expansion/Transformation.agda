@@ -1,0 +1,115 @@
+module Transformation where
+
+-- open import Common.Depth using (Depth; ⇑; ⇓)
+-- open import Common.Type using (Type; nat; _⇒_)
+-- open import Common.Name using (Name)
+-- open import Common.Context
+--   using (Context; ø; _,_⦂_; _⦂_∈_; keep; drop; _⊆_; ⊆-refl)
+-- open import PCF.Syntax using (_⊢´_⊚_)
+-- open import PCF.Syntax.Properties
+-- open import NPCF.Syntax using (_N⊢´_⊚_)
+-- open import NPCF.Syntax.Properties
+--   renaming (context-substitution to context-substitution-npcf;
+--             _⦂_not-called-in_ to npcf-not-called-in)
+-- open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
+-- open import Data.Nat using (ℕ; zero; suc)
+--
+-- preserve-calls : ∀{Γ v τ τ'}{t : Γ ⊢´ τ' ⊚ ⇓} → v ⦂ τ not-called-in t → Γ N⊢´ τ' ⊚ ⇓
+-- preserve-calls {t = PCF.Syntax.zer}       no-call-zer        = NPCF.Syntax.zer
+-- preserve-calls {t = PCF.Syntax.var v' e}  (no-call-varn _)   = NPCF.Syntax.var v' e
+-- preserve-calls {t = PCF.Syntax.var v' e}  (no-call-vart _)   = NPCF.Syntax.var v' e
+-- preserve-calls {t = PCF.Syntax.suc _}     (no-call-suc p)    = NPCF.Syntax.suc (preserve-calls p)
+-- preserve-calls {t = PCF.Syntax.abs v' _}  (no-call-abs p)    = NPCF.Syntax.abs v' (preserve-calls p)
+-- preserve-calls {t = PCF.Syntax.app _ _}   (no-call-app p p₁) = NPCF.Syntax.app (preserve-calls p) (preserve-calls p₁)
+-- preserve-calls {t = PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (no-call-match p p₁ p₂)
+--   = NPCF.Syntax.match preserve-calls p [z⇨ preserve-calls p₁ suc v' ⇨ preserve-calls p₂ ]
+--
+-- erase-calls : ∀{Γ v τ τ'}{t : Γ ⊢´ τ' ⊚ ⇓} → v ⦂ τ called-in t → Γ N⊢´ τ' ⊚ ⇓
+-- erase-calls {Γ} {v} {τ} {.τ} {.(PCF.Syntax.var v _)} call-var
+--   = NPCF.Syntax.err
+-- erase-calls {Γ} {v} {τ} {.nat} {.(PCF.Syntax.suc _)} (call-suc p)
+--   = NPCF.Syntax.suc (erase-calls p)
+-- erase-calls {Γ} {v} {τ} {.(_ ⇒ _)} {PCF.Syntax.abs v' _} (call-abs p)
+--   = NPCF.Syntax.abs v' (erase-calls p)
+-- erase-calls {Γ} {v} {τ} {τ'} {.(PCF.Syntax.app _ _)} (call-app1 p x)
+--   = NPCF.Syntax.app (erase-calls p) (preserve-calls x)
+-- erase-calls {Γ} {v} {τ} {τ'} {.(PCF.Syntax.app _ _)} (call-app2 x p)
+--   = NPCF.Syntax.app (preserve-calls x) (erase-calls p)
+-- erase-calls {Γ} {v} {τ} {τ'} {.(PCF.Syntax.app _ _)} (call-app12 p p₁)
+--   = NPCF.Syntax.app (erase-calls p) (erase-calls p₁)
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc1 p x x₁)
+--   = NPCF.Syntax.match erase-calls p [z⇨ preserve-calls x suc v' ⇨ preserve-calls x₁ ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc2 x p x₁)
+--   = NPCF.Syntax.match preserve-calls x [z⇨ erase-calls p suc v' ⇨ preserve-calls x₁ ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc3 x x₁ p)
+--   = NPCF.Syntax.match preserve-calls x [z⇨ preserve-calls x₁ suc v' ⇨ erase-calls p ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc12 p p₁ x)
+--   = NPCF.Syntax.match erase-calls p [z⇨ erase-calls p₁ suc v' ⇨ preserve-calls x ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc13 p x p₁)
+--   = NPCF.Syntax.match erase-calls p [z⇨ preserve-calls x suc v' ⇨ erase-calls p₁ ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc23 x p p₁)
+--   = NPCF.Syntax.match preserve-calls x [z⇨ erase-calls p suc v' ⇨ erase-calls p₁ ]
+-- erase-calls {Γ} {v} {τ} {τ'} {PCF.Syntax.match _ [z⇨ _ suc v' ⇨ _ ]} (call-mtc123 p p₁ p₂)
+--   = NPCF.Syntax.match erase-calls p [z⇨ erase-calls p₁ suc v' ⇨ erase-calls p₂ ]
+--
+-- -- data _adjusts-to_ : ∀{Γ τ v} → Γ , v ⦂ τ ⊢´ τ ⊚ ⇓ → Γ N⊢´ τ ⊚ ⇓ → Set where
+-- --   erase    : ∀{Γ v τ₁}{t₁ : Γ , v ⦂ τ₁ ⊢´ τ₁ ⊚ ⇓}{t₂ : Γ N⊢´ τ₁ ⊚ ⇓}
+-- --              → v ⦂ τ₁ called-in t­₁ →
+-- --   --preserve :
+--
+-- data _translates-to_ : ∀{Γ Δ τ ρ} → Γ ⊢´ τ ⊚ ρ → Δ N⊢´ τ ⊚ ρ → Set where
+--   tzer : ∀{Γ} → PCF.Syntax.zer {Γ = Γ} translates-to NPCF.Syntax.zer {Γ = Γ}
+--   tvar : ∀{Γ v τ}{v∈Γ : v ⦂ τ ∈ Γ} → (PCF.Syntax.var v v∈Γ) translates-to (NPCF.Syntax.var v v∈Γ)
+--   tsuc : ∀{Γ}{t₁ : Γ ⊢´ nat ⊚ ⇓}{t₂ : Γ N⊢´ nat ⊚ ⇓}
+--          → t₁ translates-to t₂
+--          → PCF.Syntax.suc t₁ translates-to NPCF.Syntax.suc t₂
+--   tabs : ∀{Γ v τ₁ τ₂}{t₁ : Γ , v ⦂ τ₁ ⊢´ τ₂ ⊚ ⇓}{t₂ : Γ , v ⦂ τ₁ N⊢´ τ₂ ⊚ ⇓}
+--          → t₁ translates-to t₂
+--          → PCF.Syntax.abs v t₁ translates-to NPCF.Syntax.abs v t₂
+--   tapp : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢´ τ₁ ⇒ τ₂ ⊚ ⇓}{t₂ : Γ ⊢´ τ₁ ⊚ ⇓}{t₃ : Γ N⊢´ τ₁ ⇒ τ₂ ⊚ ⇓}{t₄ : Γ N⊢´ τ₁ ⊚ ⇓}
+--          → t₁ translates-to t₃ → t₂ translates-to t₄
+--          → PCF.Syntax.app t₁ t₂ translates-to NPCF.Syntax.app t₃ t₄
+--   tmtc : ∀{Γ τ v}{t₁ : Γ ⊢´ nat ⊚ ⇓}{t₂ : Γ ⊢´ τ ⊚ ⇓}{t₃ : Γ , v ⦂ nat ⊢´ τ ⊚ ⇓}
+--           {t₄ : Γ N⊢´ nat ⊚ ⇓}{t₅ : Γ N⊢´ τ ⊚ ⇓}{t₆ : Γ , v ⦂ nat N⊢´ τ ⊚ ⇓}
+--           → t₁ translates-to t₄ → t₂ translates-to t₅ → t₃ translates-to t₆
+--           → PCF.Syntax.match t₁ [z⇨ t₂ suc v ⇨ t₃ ] translates-to NPCF.Syntax.match t₄ [z⇨ t₅ suc v ⇨ t₆ ]
+--   tlet : ∀{Γ v τ₁ τ₂ ρ}{t₁ : Γ , v ⦂ τ₁ ⊢´ τ₁ ⊚ ⇓}{t₂ : Γ , v ⦂ τ₁ ⊢´ τ₂ ⊚ ρ}
+--           {t₃ : Γ N⊢´ τ₁ ⊚ ⇓}{t₄ : Γ , v ⦂ τ₁ N⊢´ τ₂ ⊚ ρ}
+--           → t₁ translates-to t₃
+--           → t₂ translates-to t₄
+--           → (PCF.Syntax.let´ v ← t₁ in´ t₂) translates-to (NPCF.Syntax.let´ v ← t₃ in´ t₄)
+--   -- rec1 : ∀{Γ v τ₁ τ₂ ρ}{t₁ : Γ , v ⦂ τ₁ ⊢´ τ₁ ⊚ ⇓}{t₃ : Γ N⊢´ τ₁ ⊚ ⇓}
+--   --         →
+--
+-- -- translate : ∀{Γ τ ρ} → Γ ⊢´ τ ⊚ ρ → ∃ ( λ (Δ : Context) → ∃ ( λ (r : Δ ⊆ Γ) → Δ N⊢´ τ ⊚ ρ))
+-- -- translate {Γ} {.nat} {.⇓} PCF.Syntax.zer
+-- --   = Γ /\ ⊆-refl /\ NPCF.Syntax.zer
+-- -- translate {Γ} {.nat} {.⇓} (PCF.Syntax.suc t) with translate t
+-- -- ... | Δ /\ r /\ t' = Δ /\ r /\ NPCF.Syntax.suc t'
+-- -- translate {Γ} {τ} {.⇓} (PCF.Syntax.var v x)
+-- --   = Γ /\ ⊆-refl /\ NPCF.Syntax.var v x
+-- -- translate {Γ} {.(_ ⇒ _)} {.⇓} (PCF.Syntax.abs v t) with translate t
+-- -- ... | Δ /\ r /\ t' = Γ /\ ⊆-refl /\ NPCF.Syntax.abs v (context-substitution-npcf r t')
+-- -- translate {Γ} {τ} {.⇓} (PCF.Syntax.app t t₁) with translate t | translate t₁
+-- -- ... | Δ₁ /\ r₁ /\ t' | Δ₂ /\ r₂ /\ t₁' = Γ /\ ⊆-refl /\ NPCF.Syntax.app
+-- --                                                           (context-substitution-npcf r₁ t')
+-- --                                                           (context-substitution-npcf r₂ t₁')
+-- -- translate {Γ} {τ} {.⇓} PCF.Syntax.match t [z⇨ t₁ suc v ⇨ t₂ ] with translate t | translate t₁ | translate t₂
+-- -- ... | Δ₁ /\ r₁ /\ t' | Δ₂ /\ r₂ /\ t₁' | Δ /\ r₃ /\ t₂'
+-- --   = Γ /\ {!   !} /\ {!   !}
+-- -- translate {Γ} {τ} {.⇑} (PCF.Syntax.let´ v ← t in´ t₁) = {!   !}
+--
+-- -- translate PCF.Syntax.zer        = NPCF.Syntax.zer
+-- -- translate (PCF.Syntax.suc t)    = NPCF.Syntax.suc (translate t)
+-- -- translate (PCF.Syntax.abs v t)  = NPCF.Syntax.abs v (translate t)
+-- -- translate (PCF.Syntax.app t t₁) = NPCF.Syntax.app (translate t) (translate t₁)
+-- -- translate PCF.Syntax.match t [z⇨ t₁ suc v ⇨ t₂ ] = NPCF.Syntax.match (translate t)
+-- --                                                      [z⇨ (translate t₁)
+-- --                                                       suc v ⇨ (translate t₂) ]
+-- -- translate (PCF.Syntax.var v x)  = NPCF.Syntax.var v x
+-- -- translate {Γ = Γ} (PCF.Syntax.let´ v ← t in´ t₁) with dec-rec (PCF.Syntax.let´ v ← t in´ t₁)
+-- -- ... | zero /\ ø /\ no-rec-⇑ r x = NPCF.Syntax.let´ v ← {! translate {Γ , v ⦂ τ} t  !} in´ translate t₁
+-- -- ... | zero /\ G , x ⦂ x₁ /\ no-rec-⇑ r x₂ = {!   !}
+-- -- ... | suc n /\ ø /\ no-rec-⇑ r x = {!   !}
+-- -- ... | suc n /\ G , x ⦂ x₁ /\ no-rec-⇑ r x₂ = {!   !}
+-- -- ... | suc n /\ G , .v ⦂ x /\ rec-⇑ r x₁ = {!   !}

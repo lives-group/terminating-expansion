@@ -3,20 +3,9 @@ module PCF.Syntax where
 open import Common.Context using (Context; ø; _,_⦂_; _⦂_∈_; here; there)
 open import Common.Type using (Type; nat; _⇒_)
 open import Common.Name using (Name)
+open import Common.Depth using (Depth; ⇑; ⇓)
 
 infix 9 _⊢_
-
-{-
-  A Depth indicates if an expression has
-  let_in_ constructions. This is useful because
-  in this simply typed calculus, only such expressions
-  can have recursion. The Depth ⇑ indicates the presence
-  of a let_in_ in the expression. The Depth ⇓ indicates its
-  absence.
--}
-data Depth : Set where
-  ⇑ : Depth
-  ⇓ : Depth
 
 data _⊢_ : Context → Type → Depth → Set where
   zer : ∀{Γ} → (Γ ⊢ nat) ⇓

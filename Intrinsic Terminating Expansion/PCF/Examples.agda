@@ -3,6 +3,7 @@ module PCF.Examples where
 open import Common.Type
 open import Common.Context
 open import Common.Name
+open import Common.Depth using (Depth; ⇑; ⇓)
 open import PCF.Syntax
 open import PCF.Syntax.Properties
 open import PCF.Syntax.Unrolling
