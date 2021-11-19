@@ -8,7 +8,6 @@ open import Common.Depth using (Depth; ⇑; ⇓)
 infix 9 _⊢_
 
 data _⊢_ : Context → Type → Depth → Set where
-  err : ∀{Γ τ} → (Γ ⊢ τ) ⇓
   zer : ∀{Γ} → (Γ ⊢ nat) ⇓
   suc : ∀{Γ} → (Γ ⊢ nat) ⇓ → (Γ ⊢ nat) ⇓
   var : ∀{Γ τ} (v : Name) → v ⦂ τ ∈ Γ → (Γ ⊢ τ) ⇓

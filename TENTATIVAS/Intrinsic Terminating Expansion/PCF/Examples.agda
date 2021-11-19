@@ -338,24 +338,3 @@ right-answer-unroll = let´ "sum" ← right-answer-expand-once
 
 _ : unroll sum-is-recursive vf ≡ right-answer-unroll
 _ = refl
-
-right-answer-rec-elim : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇑
-right-answer-rec-elim = let´ "sum" ←
-                            abs "x1"
-                            (abs "x2"
-                             match var "x1" (there here) [z⇨ var "x2" here suc "x3" ⇨
-                             app
-                             (app
-                              (abs "x1"
-                               (abs "x2"
-                                match var "x1" (there here) [z⇨ var "x2" here suc "x3" ⇨
-                                app
-                                (app
-                                 (err)
-                                 (var "x3" here))
-                                (suc (var "x2" (there here)))
-                                ]))
-                              (var "x3" here))
-                             (suc (var "x2" (there here)))
-                             ])
-                        in´ var "sum" here

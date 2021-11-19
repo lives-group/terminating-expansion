@@ -9,7 +9,7 @@ open import PCF.Syntax.Properties
 open import Relation.Nullary using (¬_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Data.Nat.Properties using (+-suc)
-open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
+open import Data.Product using (∃) renaming (_,_ to _/\_)
 
 inline : ∀{Γ Δ τ v τ'}{t₁ : Γ ⊢´ τ ⊚ ⇓}
          → v ⦂ τ' called-in t₁
@@ -116,15 +116,10 @@ data VecFuel : ℕ → Set where
   _∷_ : ∀{n n₁} → Fuel n₁ → VecFuel n → VecFuel (suc n)
 
 unroll : ∀{Γ Δ v ρ τ τ' n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{t' : Γ , v ⦂ τ ⊢´ τ' ⊚ ρ}
-         → (let´ v ← t in´ t') ▸rec Δ [ suc n ]
-         → VecFuel (suc n)
-         → ∃ ( λ (t₁ : Γ ⊢´ τ' ⊚ ⇑) → t₁ ▸rec Δ [ suc n ] )
+         → (let´ v ← t in´ t') ▸rec Δ [ suc n ] → VecFuel (suc n) → Γ ⊢´ τ' ⊚ ⇑
 unroll {Γ} {Δ} {v} {⇑} {τ} {τ'} {n} {t} {let´ v₁ ← t' in´ t''} (no-rec-⇑ r x) fs
-  = let´ v ← t in´ (proj₁ (unroll r fs))
-    /\ no-rec-⇑ (proj₂ (unroll r fs)) x
+  = let´ v ← t in´ unroll r fs
 unroll {Γ} {Δ} {v} {ρ} {τ} {τ'} {zero} {t} {t'} (rec-⇑ r x) (f ∷ [])
-  = let´ v ← proj₁ (expand x f) in´ t'
-    /\ rec-⇑ r (proj₁ (proj₂ (expand x f)))
+  = let´ v ← extractExpansion (expand x f) in´ t'
 unroll {Γ} {Δ} {v} {⇑} {τ} {τ'} {suc n} {t} {let´ v₁ ← t' in´ t''} (rec-⇑ r x) (f ∷ fs)
-  = let´ v ← proj₁ (expand x f) in´ (proj₁ (unroll r fs))
-    /\ rec-⇑ (proj₂ (unroll r fs)) (proj₁ (proj₂ (expand x f)))
+  = let´ v ← extractExpansion (expand x f) in´ unroll r fs

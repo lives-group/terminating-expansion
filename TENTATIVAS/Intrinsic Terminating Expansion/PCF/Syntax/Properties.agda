@@ -5,7 +5,7 @@ open import Common.Context
 open import Common.Name
 open import Common.Depth using (Depth; ⇑; ⇓)
 open import PCF.Syntax
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Data.Nat using (ℕ; suc; zero)
 open import Relation.Nullary using (¬_; yes; no)
 open import Data.String using (_≟_)
@@ -17,7 +17,6 @@ Evidence for variable calls
 -}
 
 data _⦂_not-called-in_ : ∀{Γ τ} → Name → Type → Γ ⊢´ τ ⊚ ⇓ → Set where
-  no-call-err   : ∀{Γ v τ τ'} → v ⦂ τ not-called-in (err {Γ} {τ'})
   no-call-zer   : ∀{Γ v τ} → v ⦂ τ not-called-in (zer {Γ})
   no-call-varn  : ∀{Γ v₁ v₂ τ τ'}{t : v₂ ⦂ τ ∈ Γ} → ¬(v₁ ≡ v₂)
                 → v₁ ⦂ τ' not-called-in (var v₂ t)
@@ -78,7 +77,6 @@ data CallTotal : ∀{Γ τ} → Name → Type → Γ ⊢´ τ ⊚ ⇓ → Set wh
                → v ⦂ τ not-called-in t → CallTotal v τ t
 
 dec-called : ∀{Γ τ'}(v : Name)(τ : Type)(t : Γ ⊢´ τ' ⊚ ⇓) → CallTotal v τ t
-dec-called v τ err = not-called no-call-err
 dec-called v τ zer = not-called no-call-zer
 dec-called {τ' = τ'} v τ (var v₁ x) with v ≟ v₁ | dec-equals τ τ'
 dec-called {τ' = τ'} v τ (var v₁ x) | yes refl | yes refl = is-called call-var
@@ -119,15 +117,10 @@ data _▸rec_[_] : ∀{Γ τ ρ} → Γ ⊢´ τ ⊚ ρ → Context → ℕ → 
 extractType : ∀{Γ v τ τ' ρ} → Γ , v ⦂ τ ⊢´ τ' ⊚ ρ → Type
 extractType {τ = τ} _ = τ
 
-n-is-length : ∀{Γ τ ρ Δ n}{t : Γ ⊢´ τ ⊚ ρ} → t ▸rec Δ [ n ] → n ≡ length Δ
-n-is-length no-rec-⇓       = refl
-n-is-length (no-rec-⇑ r x) = n-is-length r
-n-is-length (rec-⇑ r x)    = cong suc (n-is-length r)
-
 {-
 It is decidable to check if a function is recursive
 -}
-dec-rec : ∀{Γ τ ρ} → (t : Γ ⊢´ τ ⊚ ρ) → ∃ ( λ (n : ℕ) → ∃ ( λ (Δ : Context) → t ▸rec Δ [ n ] ))
+dec-rec : ∀{Γ τ ρ} → (t : Γ ⊢´ τ ⊚ ρ) → ∃ ( λ (n : ℕ) → ∃ ( λ (Δ : Context) → t ▸rec Δ [ n ]))
 dec-rec {ρ = ⇓} t = 0 /\ (ø /\ no-rec-⇓)
 dec-rec (let´ v ← t in´ t₁) with dec-called v (extractType t₁) t | dec-rec t₁
 ... | is-called  x | n /\ Δ /\ r = suc n /\ (Δ , v ⦂ (extractType t₁) /\ rec-⇑ r x )
@@ -137,7 +130,6 @@ dec-rec (let´ v ← t in´ t₁) with dec-called v (extractType t₁) t | dec-r
 Context substitution is useful for inlining
 -}
 context-substitution : ∀{Γ Δ τ ρ} → Γ ⊆ Δ → Γ ⊢´ τ ⊚ ρ → Δ ⊢´ τ ⊚ ρ
-context-substitution p err = err
 context-substitution p zer = zer
 context-substitution p (suc t) = suc (context-substitution p t)
 context-substitution p (var v x) = var v (∈-substitution p x)
@@ -157,7 +149,6 @@ no-call-preserving : ∀{Γ Δ v τ₁ τ₂}{t : Δ ⊢´ τ₂ ⊚ ⇓}
                      (r : Δ ⊆ Γ)
                      → v ⦂ τ₁ not-called-in t
                      → v ⦂ τ₁ not-called-in (context-substitution r t)
-no-call-preserving r no-call-err = no-call-err
 no-call-preserving r no-call-zer = no-call-zer
 no-call-preserving r (no-call-varn x) = no-call-varn x
 no-call-preserving r (no-call-vart x) = no-call-vart x

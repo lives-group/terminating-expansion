@@ -2,7 +2,6 @@ module Common.Context where
 
 open import Common.Type using (Type)
 open import Common.Name using (Name)
-open import Data.Nat using (ℕ; zero; suc)
 
 infixl 15 _,_⦂_
 infix  10 _⦂_∈_
@@ -36,7 +35,3 @@ data _⊆_ : Context → Context → Set where
 ⊆-refl : ∀{Γ} → Γ ⊆ Γ
 ⊆-refl {ø} = empty
 ⊆-refl {Γ , x ⦂ x₁} = keep ⊆-refl
-
-length : Context → ℕ
-length ø = 0
-length (Γ , _ ⦂ _) = suc (length Γ)
