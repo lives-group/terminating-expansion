@@ -11,6 +11,8 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary using (¬_)
 open import Data.Unit using (⊤)
 open import Data.Nat using (ℕ)
+open import Data.Product using (∃; proj₁; proj₂)
+open import Transformation using (transformation)
 
 -- Syntatic Sugar for function application
 infixl 20 _∙_
@@ -336,7 +338,7 @@ right-answer-unroll : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇑
 right-answer-unroll = let´ "sum" ← right-answer-expand-once
                         in´ var "sum" here
 
-_ : unroll sum-is-recursive vf ≡ right-answer-unroll
+_ : proj₁ (unroll sum-is-recursive vf) ≡ right-answer-unroll
 _ = refl
 
 right-answer-rec-elim : ø ⊢´ nat ⇒ nat ⇒ nat ⊚ ⇑
@@ -359,3 +361,6 @@ right-answer-rec-elim = let´ "sum" ←
                              (suc (var "x2" (there here)))
                              ])
                         in´ var "sum" here
+
+_ : proj₁ (transformation sum-is-recursive vf) ≡ right-answer-rec-elim
+_ = refl

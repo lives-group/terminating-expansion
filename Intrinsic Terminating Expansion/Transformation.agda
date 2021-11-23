@@ -61,12 +61,18 @@ recursion-elimination {Γ} {Δ , x ⦂ x₁} {τ} {⇑} {let´ v ← t in´ t₁
   = (let´ v ← proj₁ (call-elimination x₂) in´ proj₁ (recursion-elimination r))
      /\ no-rec-⇑ (proj₂ (recursion-elimination r)) (proj₂ (call-elimination x₂))
 
--- need to think this through
--- transformation : ∀{Γ τ ρ n}(t : Γ ⊢´ τ ⊚ ρ) → VecFuel n → ∃ ( λ (t' : Γ ⊢´ τ ⊚ ρ) → t' ▸rec ø [ 0 ] )
--- transformation {ρ = ⇓} t f = t /\ no-rec-⇓
--- transformation {ρ = ⇑} t f with dec-rec t
--- transformation {ρ = ⇑} t f | n /\ Δ /\ r with n-is-length r
--- transformation {ρ = ⇑} t f | 0 /\ ø /\ r | refl
---   = t /\ r
--- transformation {ρ = ⇑} t f | (suc n) /\ (Δ , v ⦂ τ) /\ r | refl
---   = proj₁ (recursion-elimination {!   !} ) /\ {!   !}
+transformation : ∀{Γ Δ τ ρ n}{t : Γ ⊢´ τ ⊚ ρ}
+                 → t ▸rec Δ [ n ]
+                 → VecFuel n
+                 → ∃ ( λ (t' : Γ ⊢´ τ ⊚ ρ) → t' ▸rec ø [ 0 ] )
+transformation r fs with n-is-length r
+transformation {t = t} no-rec-⇓ [] | refl
+  = t /\ no-rec-⇓
+transformation {Δ = ø} {n = 0} {t = t} (no-rec-⇑ r x) [] | refl
+  = t /\ (no-rec-⇑ r x)
+transformation {Δ = Δ , v ⦂ τ'} {n = suc n} {t = t} (no-rec-⇑ r x) (f ∷ fs) | refl
+  = proj₁ (recursion-elimination (proj₂ (unroll (no-rec-⇑ r x) (f ∷ fs))))
+    /\ proj₂ (recursion-elimination (proj₂ (unroll (no-rec-⇑ r x) (f ∷ fs))))
+transformation {t = t} (rec-⇑ r p) (f ∷ fs) | refl
+  = (proj₁ (recursion-elimination (proj₂ (unroll (rec-⇑ r p) (f ∷ fs)))))
+     /\ proj₂ (recursion-elimination (proj₂ (unroll (rec-⇑ r p) (f ∷ fs))))

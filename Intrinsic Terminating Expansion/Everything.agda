@@ -19,8 +19,7 @@ open import Common.Context
 open import PCF.Syntax
 open import PCF.Syntax.Properties
 open import PCF.Syntax.Unrolling
-open import PCF.Examples
-
--- open import NPCF.Syntax
 
 open import Transformation
+
+open import PCF.Examples
