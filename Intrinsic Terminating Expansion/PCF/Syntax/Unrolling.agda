@@ -97,7 +97,9 @@ data _expands-to_in´_steps : ∀{Γ v τ}{t t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓
            → p₁ expands-to p₃ in´ (n₂ + n₁) steps
 
 expand : ∀{Γ v τ n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}(p₁ : v ⦂ τ called-in t) → Fuel n
-         → ∃ (λ (t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓) → ∃ (λ (p₂ : v ⦂ τ called-in t') → p₁ expands-to p₂ in´ n steps))
+         → ∃ (λ (t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓)
+         →  ∃ (λ (p₂ : v ⦂ τ called-in t')
+         →  p₁ expands-to p₂ in´ n steps))
 expand {t = t} p (gas 0)    = t /\ p /\ none
 expand {t = t} p (gas 1)    = inline p t ⊆-refl /\ (expand-once p) /\ simple
 expand {t = t} p (gas (suc f)) with expand p (gas f)
