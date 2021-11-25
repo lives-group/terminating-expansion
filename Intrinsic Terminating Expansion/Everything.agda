@@ -19,6 +19,7 @@ open import Common.Context
 open import PCF.Syntax
 open import PCF.Syntax.Properties
 open import PCF.Syntax.Unrolling
+open import PCF.Semantics
 
 open import Transformation
 
