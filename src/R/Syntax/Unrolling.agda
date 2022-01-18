@@ -1,11 +1,11 @@
-module PCF.Syntax.Unrolling where
+module R.Syntax.Unrolling where
 
 open import Common.Type
 open import Common.Context
 open import Common.Name
 open import Common.Depth using (Depth; ⇑; ⇓)
-open import PCF.Syntax
-open import PCF.Syntax.Properties
+open import R.Syntax
+open import R.Syntax.Properties
 open import Relation.Nullary using (¬_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Data.Nat.Properties using (+-suc)
@@ -68,7 +68,8 @@ vcp-inline (call-mtc123 p p₁ p₂) r q = call-mtc123
 
 {-
 Inlining a term into itself preserves
-variable calls
+variable calls. But doing it makes
+inlined code grow super exponentially.
 -}
 expand-once : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}
               (p : v ⦂ τ called-in t)
@@ -81,9 +82,21 @@ inductively-expand : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}
                      → v ⦂ τ called-in (inline ps t ⊆-refl)
 inductively-expand {p = p} ps = vcp-inline ps ⊆-refl p
 
+{-
+Fuel determines how many times a function
+will be expanded.
+-}
 data Fuel : ℕ → Set where
   gas : ∀ n → Fuel n
 
+data VecFuel : ℕ → Set where
+  []  : VecFuel 0
+  _∷_ : ∀{n n₁} → Fuel n₁ → VecFuel n → VecFuel (suc n)
+
+{-
+A partial order to relate funcions with their
+expansions.
+-}
 data _expands-to_in´_steps : ∀{Γ v τ}{t t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}
                              (p : v ⦂ τ called-in t)(p' : v ⦂ τ called-in t')
                              → ℕ → Set where
@@ -96,6 +109,11 @@ data _expands-to_in´_steps : ∀{Γ v τ}{t t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓
            → p₁ expands-to p₂ in´ n₁ steps → p₂ expands-to p₃ in´ n₂ steps
            → p₁ expands-to p₃ in´ (n₂ + n₁) steps
 
+{-
+Every function that calls some variable of
+its same type can be expanded in finite
+number of steps.
+-}
 expand : ∀{Γ v τ n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}(p₁ : v ⦂ τ called-in t) → Fuel n
          → ∃ (λ (t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓)
          →  ∃ (λ (p₂ : v ⦂ τ called-in t')
@@ -105,18 +123,11 @@ expand {t = t} p (gas 1)    = inline p t ⊆-refl /\ (expand-once p) /\ simple
 expand {t = t} p (gas (suc f)) with expand p (gas f)
 ... | t₁ /\ p₁ /\ p▸p₁ = (inline p₁ t ⊆-refl) /\ (vcp-inline p₁ ⊆-refl p /\ trans p▸p₁ simple)
 
-extract : ∀{Γ τ v}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓} → v ⦂ τ called-in t → Γ , v ⦂ τ ⊢´ τ ⊚ ⇓
-extract {_} {_} {_} {t} _ = t
-
-extractExpansion : ∀{Γ τ v n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{p₁ : v ⦂ τ called-in t}
-                   → ∃ (λ (t' : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓) → ∃ (λ (p₂ : v ⦂ τ called-in t') → p₁ expands-to p₂ in´ n steps))
-                   → Γ , v ⦂ τ ⊢´ τ ⊚ ⇓
-extractExpansion (t' /\ _) = t'
-
-data VecFuel : ℕ → Set where
-  []  : VecFuel 0
-  _∷_ : ∀{n n₁} → Fuel n₁ → VecFuel n → VecFuel (suc n)
-
+{-
+Every term that contains at least one recursive function
+can be unrolled to a term that contains the same list
+of recursive functions.
+-}
 unroll : ∀{Γ Δ v ρ τ τ' n}{t : Γ , v ⦂ τ ⊢´ τ ⊚ ⇓}{t' : Γ , v ⦂ τ ⊢´ τ' ⊚ ρ}
          → (let´ v ← t in´ t') ▸rec Δ [ suc n ]
          → VecFuel (suc n)

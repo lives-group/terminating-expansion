@@ -40,7 +40,3 @@ data _⊆_ : Context → Context → Set where
 length : Context → ℕ
 length ø = 0
 length (Γ , _ ⦂ _) = suc (length Γ)
-
-drop-operation : Context → Context
-drop-operation ø = ø
-drop-operation (Γ , v ⦂ t) = Γ 

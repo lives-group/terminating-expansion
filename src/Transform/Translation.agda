@@ -1,53 +1,53 @@
-module Transformation where
+module Transform.Translation where
 
 open import Common.Depth using (Depth; ⇑; ⇓)
 open import Common.Type using (Type; nat; _⇒_)
 open import Common.Name using (Name)
 open import Common.Context
-open import PCF.Syntax
-open import PCF.Syntax.Properties
-open import PCF.Syntax.Unrolling
-open import NPCF.Syntax renaming (_⊢´_⊚_ to _⊩´_⊚_)
-open import NPCF.Syntax.Properties hiding (_⦂_called-in_)
+open import R.Syntax
+open import R.Syntax.Properties
+open import R.Syntax.Unrolling
+open import L.Syntax renaming (_⊢´_⊚_ to _⊩´_⊚_)
+open import L.Syntax.Properties hiding (_⦂_called-in_)
   renaming (_⦂_not-called-in_ to _⦂_n-not-called-in_)
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-call-elimination : ∀ {Γ v τ τ'}{t : Γ ⊢´ τ' ⊚ ⇓}
-  → v ⦂ τ called-in t
-  → ∃ ( λ (t' : Γ ⊩´ τ' ⊚ ⇓) → v ⦂ τ n-not-called-in t' )
-call-elimination {t = zer} ()
-call-elimination {t = suc t} (call-suc x)
-  = NPCF.Syntax.suc (proj₁ (call-elimination x))
-    /\ no-call-suc (proj₂ (call-elimination x))
-call-elimination {t = var v x} call-var
-  = err
-    /\ no-call-err
-call-elimination {t = abs v t} (call-abs x)
-  = NPCF.Syntax.abs v (proj₁ (call-elimination x))
-    /\ no-call-abs (proj₂ (call-elimination x))
-call-elimination {t = app t t₁} (call-app1 x x₁)
-  = {!   !}
-    /\ {!   !}
-call-elimination {t = app t t₁} (call-app2 x x₁)
-  = {!   !}
-call-elimination {t = app t t₁} (call-app12 x x₁)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc1 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc2 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc3 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc12 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc13 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc23 x x₁ x₂)
-  = {!   !}
-call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc123 x x₁ x₂)
-  = {!   !}
+-- call-elimination : ∀ {Γ v τ τ'}{t : Γ ⊢´ τ' ⊚ ⇓}
+--   → v ⦂ τ called-in t
+--   → ∃ ( λ (t' : Γ ⊩´ τ' ⊚ ⇓) → v ⦂ τ n-not-called-in t' )
+-- call-elimination {t = zer} ()
+-- call-elimination {t = suc t} (call-suc x)
+--   = L.Syntax.suc (proj₁ (call-elimination x))
+--     /\ no-call-suc (proj₂ (call-elimination x))
+-- call-elimination {t = var v x} call-var
+--   = err
+--     /\ no-call-err
+-- call-elimination {t = abs v t} (call-abs x)
+--   = L.Syntax.abs v (proj₁ (call-elimination x))
+--     /\ no-call-abs (proj₂ (call-elimination x))
+-- call-elimination {t = app t t₁} (call-app1 x x₁)
+--   = {!   !}
+--     /\ {!   !}
+-- call-elimination {t = app t t₁} (call-app2 x x₁)
+--   = {!   !}
+-- call-elimination {t = app t t₁} (call-app12 x x₁)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc1 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc2 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc3 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc12 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc13 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc23 x x₁ x₂)
+--   = {!   !}
+-- call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc123 x x₁ x₂)
+--   = {!   !}
 
 -- call-elimination : ∀ {Γ v τ τ'}{t : Γ ⊢´ τ' ⊚ ⇓}
 --                    → v ⦂ τ called-in t
@@ -60,7 +60,7 @@ call-elimination {t = match t [z⇨ t₁ suc v ⇨ t₂ ]} (call-mtc123 x x₁ x
 -- call-elimination {Γ = Γ} {t = suc t} (call-suc x)
 --   = proj₁ (call-elimination x)
 --     /\ proj₁ (proj₂ (call-elimination x))
---     /\ NPCF.Syntax.suc (proj₁ (proj₂ (proj₂ (call-elimination x))))
+--     /\ L.Syntax.suc (proj₁ (proj₂ (proj₂ (call-elimination x))))
 --     /\ no-call-suc (proj₂ (proj₂ (proj₂ (call-elimination x))))
 -- call-elimination {Γ = Γ} {t = abs v t} (call-abs x)
 --   = drop-operation (proj₁ (call-elimination x))
