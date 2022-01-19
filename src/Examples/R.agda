@@ -11,6 +11,10 @@ open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
+infixl 20 _∙_
+_∙_ : ∀{Γ τ₁ τ₂ ρ} → Γ ⊢ τ₁ ⇒ τ₂ ⊚ ρ → Γ ⊢ τ₁ ⊚ ⇓ → Γ ⊢ τ₂ ⊚ ρ
+_∙_ = app
+
 {- Function that sums naturals -}
 sum : ø ⊢ ℕ´ ⇒ ℕ´ ⇒ ℕ´ ⊚ ⇑
 sum = rec {- sum -}
@@ -26,3 +30,9 @@ sum = rec {- sum -}
            )
          )
       )
+
+1+2 : ø ⊢ ℕ´ ⊚ ⇑
+1+2 = sum ∙ suc´ zero´ ∙ suc´ (suc´ zero´)
+
+id : ∀{τ} → ø , τ ⊢ τ ⊚ ⇑
+id = rec (var (there here))
