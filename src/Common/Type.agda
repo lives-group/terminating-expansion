@@ -3,6 +3,7 @@ module Common.Type where
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary using (Dec; yes; no)
 
+infixr 16 _⇒_
 data Type : Set where
   ℕ´  : Type
   _⇒_ : Type → Type → Type

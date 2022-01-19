@@ -11,3 +11,14 @@ Some notes:
     - Standard Library 1.7.1
     - Kubuntu 21.10 (impish)
 -}
+
+open import Common.Depth
+open import Common.Type
+open import Common.Context
+
+open import R.Syntax
+open import R.Syntax.Properties
+open import R.Syntax.Unrolling
+
+open import Examples.Context
+open import Examples.R
