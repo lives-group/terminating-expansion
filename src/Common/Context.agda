@@ -9,14 +9,8 @@ data Context : Set where
 
 infix  10 _∈_
 data _∈_ : Type → Context → Set where
-  here : ∀{Γ τ}
-    ------------
-    → τ ∈ Γ , τ
-
-  there : ∀{Γ τ₁ τ₂}
-    → τ₁ ∈ Γ
-    -------------
-    → τ₁ ∈ Γ , τ₂
+  here : ∀{Γ τ}→ τ ∈ Γ , τ
+  there : ∀{Γ τ₁ τ₂} → τ₁ ∈ Γ → τ₁ ∈ Γ , τ₂
 
 infix 9 _⊆_
 data _⊆_ : Context → Context → Set where
