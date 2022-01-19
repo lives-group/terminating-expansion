@@ -97,6 +97,12 @@ data _called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
+  call-match23 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+    → τ₁ not-called-in t₁
+    → τ₁ called-in t₂
+    → τ₁ called-in t₃
+    → τ₁ called-in match t₁ t₂ t₃
+
   call-match123 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
     → τ₁ called-in t₁
     → τ₁ called-in t₂
@@ -155,6 +161,9 @@ call-subs Γ⊆Δ (call-match12 c c₁ x)
    (no-call-subs (keep Γ⊆Δ) x)
 call-subs Γ⊆Δ (call-match13 c x c₁)
   = call-match13 (call-subs Γ⊆Δ c) (no-call-subs Γ⊆Δ x)
+   (call-subs (keep Γ⊆Δ) c₁)
+call-subs Γ⊆Δ (call-match23 x c c₁)
+  = call-match23 (no-call-subs Γ⊆Δ x) (call-subs Γ⊆Δ c) 
    (call-subs (keep Γ⊆Δ) c₁)
 call-subs Γ⊆Δ (call-match123 c c₁ c₂)
   = call-match123 (call-subs Γ⊆Δ c) (call-subs Γ⊆Δ c₁)
