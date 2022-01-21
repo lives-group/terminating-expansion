@@ -6,6 +6,8 @@ import Common.Context as C
 open C using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; drop; ⊆-refl; ∅; here; there)
 open import R.Syntax.Base
 open import R.Syntax.Properties
+open import R.Syntax.IR
+open import R.Syntax.IR.Properties
 open import R.Syntax
 open import R.Semantics
 
@@ -62,8 +64,5 @@ loop = (rec {- loop -} (var {- loop -} here) call-var) ∙∙ zero´
 2+1 : ∅ ⊢ ℕ´
 2+1 = +1 ∙ (suc´ (suc´ zero´))
 
-2+1≡3 : eval1 (gas 5) 2+1 ≡ steps
-  (app (abs (suc´ (var here))) (suc´ (suc´ zero´)) —→⟨
-   β-abs (v-suc (v-suc v-zero)) ⟩ suc´ (suc´ (suc´ zero´)) ∎)
-  (done (v-suc (v-suc (v-suc v-zero))))
-2+1≡3 = refl
+1+2≡3 : proj₂ (output (⊩-eval (gas 100) 1+2)) ≡ done (v-suc (v-suc (v-suc v-zero)))
+1+2≡3 = refl

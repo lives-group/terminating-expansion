@@ -14,9 +14,11 @@ Some notes:
 
 open import Common.Type
 open import Common.Context
-open import Common.Fuel 
+open import Common.Fuel
 
 open import R.Syntax.Base
+open import R.Syntax.IR
+open import R.Syntax.IR.Properties
 open import R.Syntax.Properties
 open import R.Syntax.Unrolling
 open import R.Syntax
