@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Examples.Context where
 
 open import Common.Type

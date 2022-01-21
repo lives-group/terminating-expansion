@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Examples.R where
 
 open import Common.Fuel

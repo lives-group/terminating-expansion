@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 -- Intermediate Representation for System R
 module R.Syntax.IR where
 

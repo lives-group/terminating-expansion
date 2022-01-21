@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module R.Semantics where
 
 open import Common.Type

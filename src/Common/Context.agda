@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Common.Context where
 
 open import Common.Type using (Type; ℕ´)

@@ -12,6 +12,8 @@ Some notes:
     - Kubuntu 21.10 (impish)
 -}
 
+{-# OPTIONS --safe #-}
+
 open import Common.Type
 open import Common.Context
 open import Common.Fuel
@@ -23,6 +25,10 @@ open import R.Syntax.Properties
 open import R.Syntax.Unrolling
 open import R.Syntax
 open import R.Semantics
+
+open import L.Syntax
+open import L.Syntax.Properties
+open import L.Semantics
 
 open import Examples.Context
 open import Examples.R

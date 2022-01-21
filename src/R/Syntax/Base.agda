@@ -1,4 +1,6 @@
-module R.Syntax.Base where 
+{-# OPTIONS --safe #-}
+
+module R.Syntax.Base where
 
 open import Common.Type using (Type; ℕ´; _⇒_)
 open import Common.Context using (Context; _,_; _∈_)

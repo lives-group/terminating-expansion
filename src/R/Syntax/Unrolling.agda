@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module R.Syntax.Unrolling where
 
 open import Common.Type using (Type; ℕ´; _⇒_)

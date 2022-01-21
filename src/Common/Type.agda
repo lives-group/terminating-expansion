@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Common.Type where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
