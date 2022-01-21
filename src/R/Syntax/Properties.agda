@@ -211,9 +211,3 @@ call-subs Γ⊆Δ (call-match23 x c c₁)
 call-subs Γ⊆Δ (call-match123 c c₁ c₂)
   = call-match123 (call-subs Γ⊆Δ c) (call-subs Γ⊆Δ c₁)
    (call-subs (keep Γ⊆Δ) c₂)
-
-
-data Recursive : ∀{Γ τ} → Γ ⊢ τ ⊚ ⇑ → Set where
-  rec-call : ∀{Γ τ}{t : Γ , τ ⊢ τ ⊚ ⇓}
-    → τ called-in t
-    → Recursive (rec t)
