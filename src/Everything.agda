@@ -19,6 +19,7 @@ open import Common.Context
 open import R.Syntax
 open import R.Syntax.Properties
 open import R.Syntax.Unrolling
+open import R.Semantics
 
 open import Examples.Context
 open import Examples.R
