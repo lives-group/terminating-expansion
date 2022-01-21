@@ -1,12 +1,12 @@
 module R.Syntax.Properties where
 
 open import Common.Depth using (Depth; ⇓; ⇑)
-open import Common.Type using (Type; ℕ´; _⇒_)
-open import Common.Context using (Context; _,_; _∈_; _⊆_; ∈-subs; keep)
+open import Common.Type using (Type; ℕ´; _⇒_; _≟_)
+open import Common.Context using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; here; there)
 open import R.Syntax
 
-open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality using (_≢_)
+open import Relation.Nullary using (¬_; yes; no)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; _≢_)
 
 {-
 Using ¬ for “not called” raises issues with strict positivity.
@@ -109,7 +109,6 @@ data _called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-
 ⊆-subs : ∀{Γ Δ τ ρ} → Γ ⊆ Δ → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ
 ⊆-subs Γ⊆Δ zero´      = zero´
 ⊆-subs Γ⊆Δ (suc´ t)   = suc´ (⊆-subs Γ⊆Δ t)
@@ -118,6 +117,50 @@ data _called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
 ⊆-subs Γ⊆Δ (app t t₁) = app (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁)
 ⊆-subs Γ⊆Δ (match t t₁ t₂) = match (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁) (⊆-subs (keep Γ⊆Δ) t₂)
 ⊆-subs Γ⊆Δ (rec t)    = rec (⊆-subs (keep Γ⊆Δ) t)
+
+{- plfa substitution properties -}
+ext : ∀ {Γ Δ}
+  → (∀ {τ₁} → τ₁ ∈ Γ → τ₁ ∈ Δ)
+    ---------------------------------
+  → (∀ {τ₁ τ₂} → τ₁ ∈ Γ , τ₂ → τ₁ ∈ Δ , τ₂)
+ext f  here       =  here
+ext f (there τ∈Γ) =  there (f τ∈Γ)
+
+rename : ∀ {Γ Δ}
+  → (∀ {τ} → τ ∈ Γ → τ ∈ Δ)
+    -----------------------
+  → (∀ {τ ρ} → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ)
+rename f  zero´     = zero´
+rename f (suc´ t)   = suc´ (rename f t)
+rename f (var x)    = var (f x)
+rename f (abs t)    = abs (rename (ext f) t)
+rename f (app t t₁) = app (rename f t) (rename f t₁)
+rename f (match t t₁ t₂) = match (rename f t) (rename f t₁) (rename (ext f) t₂)
+rename f (rec t) = rec (rename (ext f) t)
+
+exts : ∀ {Γ Δ}
+  → (∀ {τ₁} → τ₁ ∈ Γ → Δ ⊢ τ₁ ⊚ ⇓)
+    -------------------------------------------
+  → (∀ {τ₁ τ₂} → τ₁ ∈ Γ , τ₂ → Δ , τ₂ ⊢ τ₁ ⊚ ⇓)
+exts f here      = var here
+exts f (there x) = rename there (f x)
+
+subst : ∀ {Γ Δ}
+  → (∀ {τ} → τ ∈ Γ → Δ ⊢ τ ⊚ ⇓)
+    --------------------------------
+  → (∀ {τ ρ} → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ)
+subst f  zero´     = zero´
+subst f (suc´ t)   = suc´ (subst f t)
+subst f (var x)    = f x
+subst f (abs t)    = abs (subst (exts f) t)
+subst f (app t t₁) = app (subst f t) (subst f t₁)
+subst f (match t t₁ t₂) = match (subst f t) (subst f t₁) (subst (exts f) t₂)
+subst f (rec t) = rec (subst (exts f) t)
+
+subs-lemma : ∀ {Γ τ₁ τ₂ ρ} → Γ , τ₂ ⊢ τ₁ ⊚ ρ → Γ ⊢ τ₂ ⊚ ⇓ → Γ ⊢ τ₁ ⊚ ρ
+subs-lemma {Γ} {τ₁} {τ₂} t₁ t₂
+  = subst {Γ , τ₂} {Γ} (λ {here → t₂ ; (there x) → var x}) {τ₁} t₁
+{- end of plfa substitution properties -}
 
 no-call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂ ⊚ ⇓}
   → (Γ⊆Δ : Γ ⊆ Δ)
