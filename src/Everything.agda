@@ -12,13 +12,14 @@ Some notes:
     - Kubuntu 21.10 (impish)
 -}
 
-open import Common.Depth
 open import Common.Type
 open import Common.Context
+open import Common.Fuel 
 
-open import R.Syntax
+open import R.Syntax.Base
 open import R.Syntax.Properties
 open import R.Syntax.Unrolling
+open import R.Syntax
 open import R.Semantics
 
 open import Examples.Context

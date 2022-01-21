@@ -1,10 +1,10 @@
 module R.Syntax.Unrolling where
 
-open import Common.Depth using (Depth; ⇓; ⇑)
 open import Common.Type using (Type; ℕ´; _⇒_)
+open import Common.Fuel using (Fuel; gas)
 import Common.Context as Ctx
 open Ctx using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; drop; ⊆-refl)
-open import R.Syntax
+open import R.Syntax.Base
 open import R.Syntax.Properties
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
@@ -15,11 +15,11 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 Inlines term t₂ into t₁ replacing τ₂.
 Inlining preserves variable calls.
 -}
-inline : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⊚ ⇓}{t₂ : Δ ⊢ τ₂ ⊚ ⇓}
+inline : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₁}{t₂ : Δ ⊢ τ₂}
   → τ₂ called-in t₁
   → τ₂ called-in t₂
   → Δ ⊆ Γ
-  → ∃ (λ (t₃ : Γ ⊢ τ₁ ⊚ ⇓) → τ₂ called-in t₃)
+  → ∃ (λ (t₃ : Γ ⊢ τ₁) → τ₂ called-in t₃)
 inline {t₂ = t₂} call-var c₂ Δ⊆Γ
   = ⊆-subs Δ⊆Γ t₂ /\ call-subs Δ⊆Γ c₂
 inline (call-abs c₁) c₂ Δ⊆Γ
@@ -63,24 +63,21 @@ inline (call-match123 c₁ c₃ c₄) c₂ Δ⊆Γ
     /\ call-match123  (proj₂ (inline c₁ c₂ Δ⊆Γ)) (proj₂ (inline c₃ c₂ Δ⊆Γ))
      (proj₂ (inline c₄ c₂ (drop Δ⊆Γ)))
 
-data Fuel : ℕ → Set where
-  gas : (f : ℕ) → Fuel f
-
 {-
 A partial order to relate
 terms with their expansions.
 By definition, it preserves
 variable calls.
 -}
-data _expands-to_in´_steps : ∀{Γ τ}{t₁ t₂ : Γ ⊢ τ ⊚ ⇓}
+data _expands-to_in´_steps : ∀{Γ τ}{t₁ t₂ : Γ ⊢ τ}
   → τ called-in t₁ → τ called-in t₂ → ℕ → Set where
-  ex-refl : ∀{Γ τ}{t : Γ , τ ⊢ τ ⊚ ⇓}{c : τ called-in t}
+  ex-refl : ∀{Γ τ}{t : Γ , τ ⊢ τ}{c : τ called-in t}
     → c expands-to c in´ 0 steps
 
-  ex-one : ∀{Γ τ}{t₁ t₂ : Γ , τ ⊢ τ ⊚ ⇓}{c₁ : τ called-in t₁}{c₂ : τ called-in t₂}
+  ex-one : ∀{Γ τ}{t₁ t₂ : Γ , τ ⊢ τ}{c₁ : τ called-in t₁}{c₂ : τ called-in t₂}
     → c₁ expands-to (proj₂ (inline c₁ c₂ ⊆-refl)) in´ 1 steps
 
-  ex-trans : ∀{Γ τ n₁ n₂}{t₁ t₂ t₃ : Γ , τ ⊢ τ ⊚ ⇓}
+  ex-trans : ∀{Γ τ n₁ n₂}{t₁ t₂ t₃ : Γ , τ ⊢ τ}
     {c₁ : τ called-in t₁}{c₂ : τ called-in t₂}{c₃ : τ called-in t₃}
     → c₁ expands-to c₂ in´ n₁ steps
     → c₂ expands-to c₃ in´ n₂ steps
@@ -92,9 +89,9 @@ of a term with a original, and thus doesn't
 grow super exponentially large.
 By definition, it preserves variable calls.
 -}
-expansion : ∀{Γ τ n}{t : Γ , τ ⊢ τ ⊚ ⇓}(c : τ called-in t)
+expansion : ∀{Γ τ n}{t : Γ , τ ⊢ τ}(c : τ called-in t)
   → Fuel n
-  → ∃ ( λ (t' : Γ , τ ⊢ τ ⊚ ⇓)
+  → ∃ ( λ (t' : Γ , τ ⊢ τ)
    → ∃ ( λ (c' : τ called-in t') → c expands-to c' in´ n steps ) )
 expansion {t = t} c (gas 0)
   = t /\ c /\ ex-refl

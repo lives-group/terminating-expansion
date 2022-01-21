@@ -5,7 +5,7 @@ open import Data.Nat using (ℕ; zero; suc)
 
 infixl 15 _,_
 data Context : Set where
-  ø   : Context
+  ∅   : Context
   _,_ : Context → Type → Context
 
 infix 10 _∈_
@@ -15,7 +15,7 @@ data _∈_ : Type → Context → Set where
 
 infix 9 _⊆_
 data _⊆_ : Context → Context → Set where
-  empty : ø ⊆ ø
+  empty : ∅ ⊆ ∅
   keep  : ∀{Γ Δ τ} → Γ ⊆ Δ → Γ , τ ⊆ Δ , τ
   drop  : ∀{Γ Δ τ} → Γ ⊆ Δ → Γ ⊆ Δ , τ
 
@@ -26,14 +26,14 @@ data _⊆_ : Context → Context → Set where
 ∈-subs (drop Γ⊆Δ)  τ∈Γ        = there (∈-subs Γ⊆Δ τ∈Γ)
 
 ⊆-refl : ∀{Γ} → Γ ⊆ Γ
-⊆-refl {ø}     = empty
+⊆-refl {∅}     = empty
 ⊆-refl {Γ , τ} = keep (⊆-refl)
 
 {-
 Contexts are foldable
 -}
 context-foldr : {A : Set} → (Type → A → A) → A → Context → A
-context-foldr f v  ø      = v
+context-foldr f v  ∅      = v
 context-foldr f v (Γ , τ) = f τ (context-foldr f v Γ)
 
 length : Context → ℕ

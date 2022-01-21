@@ -1,22 +1,31 @@
 module Examples.R where
 
-open import Common.Depth using (Depth; ⇓; ⇑)
+open import Common.Fuel
 open import Common.Type using (Type; ℕ´; _⇒_)
 import Common.Context as C
-open C using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; drop; ⊆-refl; ø; here; there)
-open import R.Syntax
+open C using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; drop; ⊆-refl; ∅; here; there)
+open import R.Syntax.Base
 open import R.Syntax.Properties
+open import R.Syntax
+open import R.Semantics
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 infixl 20 _∙_
-_∙_ : ∀{Γ τ₁ τ₂ ρ} → Γ ⊢ τ₁ ⇒ τ₂ ⊚ ρ → Γ ⊢ τ₁ ⊚ ⇓ → Γ ⊢ τ₂ ⊚ ρ
+_∙_ : ∀{Γ τ₁ τ₂} → Γ ⊢ τ₁ ⇒ τ₂ → Γ ⊢ τ₁ → Γ ⊢ τ₂
 _∙_ = app
 
+infixl 20 _∙∙_
+_∙∙_ : ∀{Γ τ₁ τ₂} → Γ ⊩ τ₁ ⇒ τ₂ → Γ ⊢ τ₁ → Γ ⊩ τ₂
+_∙∙_ = rec∙
+
+f≢ℕ : ∀{τ₁ τ₂} → τ₁ ⇒ τ₂ ≢ ℕ´
+f≢ℕ ()
+
 {- Function that sums naturals -}
-sum : ø ⊢ ℕ´ ⇒ ℕ´ ⇒ ℕ´ ⊚ ⇑
+sum : ∅ ⊩ ℕ´ ⇒ ℕ´ ⇒ ℕ´
 sum = rec {- sum -}
       (abs {- x -}
         (abs {- y -}
@@ -29,10 +38,32 @@ sum = rec {- sum -}
               )
            )
          )
-      )
+      ) (call-abs (call-abs (call-match3
+                              (no-call-var f≢ℕ)
+                              (no-call-var f≢ℕ)
+                              (call-app1
+                                (call-app1 call-var (no-call-var f≢ℕ))
+                                (no-call-suc (no-call-var f≢ℕ))))))
 
-1+2 : ø ⊢ ℕ´ ⊚ ⇑
-1+2 = sum ∙ suc´ zero´ ∙ suc´ (suc´ zero´)
 
-id : ∀{τ} → ø , τ ⊢ τ ⊚ ⇑
-id = rec (var (there here))
+
+1+2 : ∅ ⊩ ℕ´
+1+2 = sum ∙∙ suc´ zero´ ∙∙ suc´ (suc´ zero´)
+
+id : ∀{τ} → ∅ ⊢ τ ⇒ τ
+id = abs (var here)
+
+loop : ∀{τ} → ∅ ⊩ τ
+loop = (rec {- loop -} (var {- loop -} here) call-var) ∙∙ zero´
+
++1 : ∅ ⊢ ℕ´ ⇒ ℕ´
++1 = abs (suc´ (var here))
+
+2+1 : ∅ ⊢ ℕ´
+2+1 = +1 ∙ (suc´ (suc´ zero´))
+
+2+1≡3 : eval1 (gas 5) 2+1 ≡ steps
+  (app (abs (suc´ (var here))) (suc´ (suc´ zero´)) —→⟨
+   β-abs (v-suc (v-suc v-zero)) ⟩ suc´ (suc´ (suc´ zero´)) ∎)
+  (done (v-suc (v-suc (v-suc v-zero))))
+2+1≡3 = refl

@@ -1,9 +1,8 @@
 module R.Syntax.Properties where
 
-open import Common.Depth using (Depth; ⇓; ⇑)
 open import Common.Type using (Type; ℕ´; _⇒_; _≟_)
 open import Common.Context using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; here; there)
-open import R.Syntax
+open import R.Syntax.Base
 
 open import Relation.Nullary using (¬_; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; _≢_)
@@ -13,11 +12,11 @@ Using ¬ for “not called” raises issues with strict positivity.
 A custom not-called relation helps with it.
 -}
 
-data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
+data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ → Set where
   no-call-zero : ∀{Γ τ}
     → τ not-called-in (zero´ {Γ})
 
-  no-call-suc : ∀{Γ τ}{t : Γ ⊢ ℕ´ ⊚ ⇓}
+  no-call-suc : ∀{Γ τ}{t : Γ ⊢ ℕ´}
     → τ not-called-in t
     → τ not-called-in suc´ t
 
@@ -25,98 +24,97 @@ data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
     → τ₁ ≢ τ₂
     → τ₁ not-called-in var τ∈Γ
 
-  no-call-app : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂ ⊚ ⇓}{t₂ : Γ ⊢ τ₁ ⊚ ⇓}
+  no-call-app : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂}{t₂ : Γ ⊢ τ₁}
     → τ not-called-in t₁
     → τ not-called-in t₂
     → τ not-called-in app t₁ t₂
 
-  no-call-abs : ∀{Γ τ τ₁ τ₂}{t : Γ , τ₁ ⊢ τ₂ ⊚ ⇓}
+  no-call-abs : ∀{Γ τ τ₁ τ₂}{t : Γ , τ₁ ⊢ τ₂}
     → τ not-called-in t
     → τ not-called-in abs t
 
-  no-call-match : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  no-call-match : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ not-called-in t₁
     → τ₁ not-called-in t₂
     → τ₁ not-called-in t₃
     → τ₁ not-called-in match t₁ t₂ t₃
 
-data _called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ ⊚ ⇓ → Set where
+data _called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ → Set where
   call-var : ∀{Γ τ}{τ∈Γ : τ ∈ Γ}
     → τ called-in var τ∈Γ
 
-  call-abs : ∀{Γ τ τ₁ τ₂}{t : Γ , τ₁ ⊢ τ₂ ⊚ ⇓}
+  call-abs : ∀{Γ τ τ₁ τ₂}{t : Γ , τ₁ ⊢ τ₂}
     → τ called-in t
     → τ called-in abs t
 
-  call-suc : ∀{Γ τ}{t : Γ ⊢ ℕ´ ⊚ ⇓}
+  call-suc : ∀{Γ τ}{t : Γ ⊢ ℕ´}
     → τ called-in t
     → τ called-in suc´ t
 
-  call-app1 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂ ⊚ ⇓}{t₂ : Γ ⊢ τ₁ ⊚ ⇓}
+  call-app1 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂}{t₂ : Γ ⊢ τ₁}
     → τ called-in t₁
     → τ not-called-in t₂
     → τ called-in app t₁ t₂
 
-  call-app2 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂ ⊚ ⇓}{t₂ : Γ ⊢ τ₁ ⊚ ⇓}
+  call-app2 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂}{t₂ : Γ ⊢ τ₁}
     → τ not-called-in t₁
     → τ called-in t₂
     → τ called-in app t₁ t₂
 
-  call-app12 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂ ⊚ ⇓}{t₂ : Γ ⊢ τ₁ ⊚ ⇓}
+  call-app12 : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂}{t₂ : Γ ⊢ τ₁}
     → τ called-in t₁
     → τ called-in t₂
     → τ called-in app t₁ t₂
 
-  call-match1 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match1 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ called-in t₁
     → τ₁ not-called-in t₂
     → τ₁ not-called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match2 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match2 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ not-called-in t₁
     → τ₁ called-in t₂
     → τ₁ not-called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match3 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match3 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ not-called-in t₁
     → τ₁ not-called-in t₂
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match12 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match12 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ called-in t₁
     → τ₁ called-in t₂
     → τ₁ not-called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match13 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match13 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ called-in t₁
     → τ₁ not-called-in t₂
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match23 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match23 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ not-called-in t₁
     → τ₁ called-in t₂
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-  call-match123 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´ ⊚ ⇓}{t₂ : Γ ⊢ τ₂ ⊚ ⇓}{t₃ : Γ , ℕ´ ⊢ τ₂ ⊚ ⇓}
+  call-match123 : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊢ ℕ´}{t₂ : Γ ⊢ τ₂}{t₃ : Γ , ℕ´ ⊢ τ₂}
     → τ₁ called-in t₁
     → τ₁ called-in t₂
     → τ₁ called-in t₃
     → τ₁ called-in match t₁ t₂ t₃
 
-⊆-subs : ∀{Γ Δ τ ρ} → Γ ⊆ Δ → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ
+⊆-subs : ∀{Γ Δ τ} → Γ ⊆ Δ → Γ ⊢ τ → Δ ⊢ τ
 ⊆-subs Γ⊆Δ zero´      = zero´
 ⊆-subs Γ⊆Δ (suc´ t)   = suc´ (⊆-subs Γ⊆Δ t)
 ⊆-subs Γ⊆Δ (var x)    = var (∈-subs Γ⊆Δ x)
 ⊆-subs Γ⊆Δ (abs t)    = abs (⊆-subs (keep Γ⊆Δ) t)
 ⊆-subs Γ⊆Δ (app t t₁) = app (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁)
 ⊆-subs Γ⊆Δ (match t t₁ t₂) = match (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁) (⊆-subs (keep Γ⊆Δ) t₂)
-⊆-subs Γ⊆Δ (rec t)    = rec (⊆-subs (keep Γ⊆Δ) t)
 
 {- plfa substitution properties -}
 ext : ∀ {Γ Δ}
@@ -129,40 +127,38 @@ ext f (there τ∈Γ) =  there (f τ∈Γ)
 rename : ∀ {Γ Δ}
   → (∀ {τ} → τ ∈ Γ → τ ∈ Δ)
     -----------------------
-  → (∀ {τ ρ} → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ)
+  → (∀ {τ} → Γ ⊢ τ → Δ ⊢ τ)
 rename f  zero´     = zero´
 rename f (suc´ t)   = suc´ (rename f t)
 rename f (var x)    = var (f x)
 rename f (abs t)    = abs (rename (ext f) t)
 rename f (app t t₁) = app (rename f t) (rename f t₁)
 rename f (match t t₁ t₂) = match (rename f t) (rename f t₁) (rename (ext f) t₂)
-rename f (rec t) = rec (rename (ext f) t)
 
 exts : ∀ {Γ Δ}
-  → (∀ {τ₁} → τ₁ ∈ Γ → Δ ⊢ τ₁ ⊚ ⇓)
+  → (∀ {τ₁} → τ₁ ∈ Γ → Δ ⊢ τ₁)
     -------------------------------------------
-  → (∀ {τ₁ τ₂} → τ₁ ∈ Γ , τ₂ → Δ , τ₂ ⊢ τ₁ ⊚ ⇓)
+  → (∀ {τ₁ τ₂} → τ₁ ∈ Γ , τ₂ → Δ , τ₂ ⊢ τ₁)
 exts f here      = var here
 exts f (there x) = rename there (f x)
 
 subst : ∀ {Γ Δ}
-  → (∀ {τ} → τ ∈ Γ → Δ ⊢ τ ⊚ ⇓)
+  → (∀ {τ} → τ ∈ Γ → Δ ⊢ τ)
     --------------------------------
-  → (∀ {τ ρ} → Γ ⊢ τ ⊚ ρ → Δ ⊢ τ ⊚ ρ)
+  → (∀ {τ} → Γ ⊢ τ → Δ ⊢ τ)
 subst f  zero´     = zero´
 subst f (suc´ t)   = suc´ (subst f t)
 subst f (var x)    = f x
 subst f (abs t)    = abs (subst (exts f) t)
 subst f (app t t₁) = app (subst f t) (subst f t₁)
 subst f (match t t₁ t₂) = match (subst f t) (subst f t₁) (subst (exts f) t₂)
-subst f (rec t) = rec (subst (exts f) t)
 
-subs-lemma : ∀ {Γ τ₁ τ₂ ρ} → Γ , τ₂ ⊢ τ₁ ⊚ ρ → Γ ⊢ τ₂ ⊚ ⇓ → Γ ⊢ τ₁ ⊚ ρ
+subs-lemma : ∀ {Γ τ₁ τ₂} → Γ , τ₂ ⊢ τ₁ → Γ ⊢ τ₂ → Γ ⊢ τ₁
 subs-lemma {Γ} {τ₁} {τ₂} t₁ t₂
   = subst {Γ , τ₂} {Γ} (λ {here → t₂ ; (there x) → var x}) {τ₁} t₁
 {- end of plfa substitution properties -}
 
-no-call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂ ⊚ ⇓}
+no-call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂}
   → (Γ⊆Δ : Γ ⊆ Δ)
   → τ₁ not-called-in t₁
   → τ₁ not-called-in (⊆-subs Γ⊆Δ t₁)
@@ -177,7 +173,7 @@ no-call-subs Γ⊆Δ (no-call-match c c₁ c₂)
   = no-call-match (no-call-subs Γ⊆Δ c)
    (no-call-subs Γ⊆Δ c₁) (no-call-subs (keep Γ⊆Δ) c₂)
 
-call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂ ⊚ ⇓}
+call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂}
   → (Γ⊆Δ : Γ ⊆ Δ)
   → τ₁ called-in t₁
   → τ₁ called-in (⊆-subs Γ⊆Δ t₁)
