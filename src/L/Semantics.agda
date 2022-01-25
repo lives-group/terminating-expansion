@@ -2,7 +2,8 @@
 module L.Semantics where
 
 open import Common.Type using (Type; ℕ´; _⇒_)
-open import Common.Context using (Context; _,_; _∈_; here; there)
+open import Common.Context using (Context; _,_; _∈_; here; there; ∅)
+open import Common.Fuel using (Fuel; gas)
 open import L.Syntax
 open import L.Syntax.Properties
 
@@ -100,110 +101,70 @@ begin_ : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
   → t₁ —↠ t₂
 begin t = t
 
-{-
-Tait's Normalization Proof as seen in Pierce (2002) and
-https://github.com/gergoerdi/syntactic-stlc/blob/master/STLC/Norm.agda
--}
+data Progress {A} (t₁ : ∅ ⊪ A) : Set where
+  step : ∀ {t₂ : ∅ ⊪ A}
+    → t₁ —→ t₂
+      ----------
+    → Progress t₁
 
-data Halts : ∀{Γ τ} → Γ ⊪ τ → Set where
-  halts : ∀{Γ τ}{t t' : Γ ⊪ τ} → NormalForm t' → t —↠ t' → Halts t
+  done :
+      NormalForm t₁
+      ----------
+    → Progress t₁
 
-nf-halts : ∀{Γ τ}{t : Γ ⊪ τ} → NormalForm t → Halts t
-nf-halts {t = t}      (value x) = halts (value x) (t ∎)
-nf-halts {t = .error}  nf-err   = halts nf-err (error ∎)
+progress : ∀ {A} → (M : ∅ ⊪ A) → Progress M
+progress (var ())
+progress (abs N)                        =  done (value v-abs)
+progress (app L M) with progress L
+... | step x                            = step (ξ-1 x)
+... | done nf-err                       =  step β-err2
+... | done (value v-abs) with progress M
+...    | step x₁                        = step (ξ-2 v-abs x₁)
+...    | done (value VM)                = step (β-abs VM)
+...    | done (nf-err)                  = step (β-err3 v-abs)
+progress (zero´)                        =  done (value v-zero)
+progress (suc´ M) with progress M
+...    | step M—→M′                     =  step (ξ-suc M—→M′)
+...    | done (value VM)                =  done (value (v-suc VM))
+...    | done (nf-err)                  =  step β-err4
+progress (match L M N) with progress L
+...    | step L—→L′                     =  step (ξ-mtc L—→L′)
+...    | done (value v-zero)            =  step (β-zero)
+...    | done (value (v-suc VL))        =  step (β-suc VL)
+...    | done (nf-err)                  =  step β-err1
+progress (error)                        =  done (nf-err)
 
-NF : ∀ {a b} {A : Set a} → Rel A b → A → Set _
-NF next x = ∄ (next x)
+data Finished {Γ A} (N : Γ ⊪ A) : Set where
+  done :
+     NormalForm N
+     ----------
+   → Finished N
 
-nf-¬-—→ : ∀{Γ τ t}{t' : Γ ⊪ τ} → NormalForm {Γ} {τ} t → ¬ (t —→ t')
-nf-¬-—→ (value v-zero) ()
-nf-¬-—→ (value v-abs)  ()
-nf-¬-—→  nf-err        ()
-nf-¬-—→ (value (v-suc x)) (ξ-suc y) = nf-¬-—→ (value x) y
+  out-of-gas :
+     ----------
+     Finished N
 
-deterministic : ∀{Γ τ}{t₁ t₂ t₃ : Γ ⊪ τ} → t₁ —→ t₂ → t₁ —→ t₃ → t₂ ≡ t₃
-deterministic (ξ-1 x) (ξ-1 y) rewrite deterministic x y = refl
-deterministic (ξ-1 x) (ξ-2 x₁ y)     = ⊥-elim (nf-¬-—→ (value x₁) x)
-deterministic (ξ-1 x) (β-err3 x₁)    = ⊥-elim (nf-¬-—→ (value x₁) x)
-deterministic (ξ-2 x x₁) (ξ-1 y)     = ⊥-elim (nf-¬-—→ (value x) y)
-deterministic (ξ-2 x x₁) (ξ-2 x₂ y) rewrite deterministic x₁ y = refl
-deterministic (ξ-2 x x₁) (β-abs x₂)  = ⊥-elim (nf-¬-—→ (value x₂) x₁)
-deterministic (β-abs x) (ξ-2 x₁ y)   = ⊥-elim (nf-¬-—→ (value x) y)
-deterministic (β-abs x) (β-abs x₁)   = refl
-deterministic (ξ-suc x) (ξ-suc y) rewrite deterministic x y = refl
-deterministic (ξ-mtc x) (ξ-mtc y) rewrite deterministic x y = refl
-deterministic (ξ-mtc x) (β-suc x₁)   = ⊥-elim (nf-¬-—→ (value (v-suc x₁)) x)
-deterministic β-zero β-zero          = refl
-deterministic (β-suc x) (ξ-mtc y)    = ⊥-elim (nf-¬-—→ (value (v-suc x)) y)
-deterministic (β-suc x) (β-suc x₁)   = refl
-deterministic β-err1 β-err1          = refl
-deterministic β-err2 β-err2          = refl
-deterministic (β-err3 x) (ξ-1 y)     = ⊥-elim (nf-¬-—→ (value x) y)
-deterministic (β-err3 x) (β-err3 x₁) = refl
-deterministic β-err4 β-err4          = refl
+data Steps {A} : ∅ ⊪ A → Set where
 
--- —↠-halts : ∀{Γ τ}(t₁ t₂ : Γ ⊪ τ) → t₁ —↠ t₂ →
+  steps : {L N : ∅ ⊪ A}
+   → L —↠ N
+   → Finished N
+     ----------
+   → Steps L
 
--- data Progress {A} (t₁ : ∅ ⊪ A) : Set where
---   step : ∀ {t₂ : ∅ ⊪ A}
---     → t₁ —→ t₂
---       ----------
---     → Progress t₁
---
---   done :
---       Value t₁
---       ----------
---     → Progress t₁
---
--- progress : ∀ {A} → (M : ∅ ⊪ A) → Progress M
--- progress (var ())
--- progress (abs N)                        =  done v-abs
--- progress (app L M) with progress L
--- ...    | step L—→L′                     =  step (ξ-1 L—→L′)
--- ...    | done v-abs with progress M
--- ...        | step M—→M′                 =  step (ξ-2 v-abs M—→M′)
--- ...        | done VM                    =  step (β-abs VM)
--- progress (zero´)                        =  done v-zero
--- progress (suc´ M) with progress M
--- ...    | step M—→M′                     =  step (ξ-suc M—→M′)
--- ...    | done VM                        =  done (v-suc VM)
--- progress (match L M N) with progress L
--- ...    | step L—→L′                     =  step (ξ-mtc L—→L′)
--- ...    | done v-zero                    =  step (β-zero)
--- ...    | done (v-suc VL)                =  step (β-suc VL)
--- progress (rec L)                        =  step (β-rec)
---
--- data Finished {Γ A} (N : Γ ⊪ A) : Set where
---   done :
---      Value N
---      ----------
---    → Finished N
---
---   out-of-gas :
---      ----------
---      Finished N
---
--- data Steps {A} : ∅ ⊪ A → Set where
---
---   steps : {L N : ∅ ⊪ A}
---    → L —↠ N
---    → Finished N
---      ----------
---    → Steps L
---
--- eval1 : ∀ {A n}
---  → Fuel n
---  → (L : ∅ ⊪ A)
---    -----------
---  → Steps L
--- eval1 (gas zero)    L                    =  steps (L ∎) out-of-gas
--- eval1 (gas (suc m)) L with progress L
--- ... | done VL                            =  steps (L ∎) (done VL)
--- ... | step {M} L—→M with eval1 (gas m) M
--- ...    | steps M—↠N fin                  =  steps (L —→⟨ L—→M ⟩ M—↠N) fin
---
--- ⊩-eval : ∀ {τ n} → Fuel n → (t : ∅ ⊩ τ) → Steps (⊩-to-IR t)
--- ⊩-eval f t = eval1 f (⊩-to-IR t)
---
--- output : ∀{τ}{t₁ : ∅ ⊪ τ} → Steps t₁ → ∃ (λ t₂ → Finished t₂)
--- output (steps {L} {N} x y) = N /\ y
+eval1 : ∀ {A n}
+ → Fuel n
+ → (L : ∅ ⊪ A)
+   -----------
+ → Steps L
+eval1 (gas zero)    L                    =  steps (L ∎) out-of-gas
+eval1 (gas (suc m)) L with progress L
+... | done VL                            =  steps (L ∎) (done VL)
+... | step {M} L—→M with eval1 (gas m) M
+...    | steps M—↠N fin                  =  steps (L —→⟨ L—→M ⟩ M—↠N) fin
+
+⊪-eval : ∀ {τ n} → Fuel n → (t : ∅ ⊪ τ) → Steps t
+⊪-eval f t = eval1 f t
+
+output : ∀{τ}{t₁ : ∅ ⊪ τ} → Steps t₁ → ∃ (λ t₂ → Finished t₂)
+output (steps {L} {N} x y) = N /\ y
