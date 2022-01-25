@@ -7,7 +7,11 @@ open import L.Syntax
 open import L.Syntax.Properties
 
 open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
+open import Data.Product using (∃; ∄; proj₁; proj₂) renaming (_,_ to _/\_)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
+open import Relation.Binary using (Rel)
+open import Relation.Nullary using (¬_)
+open import Data.Empty using (⊥-elim)
 
 data Value : ∀{Γ τ} → Γ ⊪ τ → Set where
   v-zero : ∀{Γ}
@@ -21,8 +25,14 @@ data Value : ∀{Γ τ} → Γ ⊪ τ → Set where
   v-abs : ∀{Γ τ₁ τ₂}{t : Γ , τ₁ ⊪ τ₂}
     → Value (abs t)
 
-  v-err : ∀{Γ τ}
-    → Value (error {Γ} {τ})
+data NormalForm : ∀{Γ τ} → Γ ⊪ τ → Set where
+  value  : ∀{Γ τ}{t : Γ ⊪ τ}
+    → Value t
+    → NormalForm t
+
+  nf-err : ∀{Γ τ}
+    → NormalForm (error {Γ} {τ})
+
 
 infix 8 _—→_
 data _—→_ : ∀ {Γ τ} → (Γ ⊪ τ) → (Γ ⊪ τ) → Set where
@@ -56,8 +66,18 @@ data _—→_ : ∀ {Γ τ} → (Γ ⊪ τ) → (Γ ⊪ τ) → Set where
     → Value t₁
     → match (suc´ t₁) t₂ t₃ —→ subs-lemma t₃ t₁
 
-  β-err : ∀{Γ τ}{t₁ : Γ ⊪ τ}{t₂ : Γ , ℕ´ ⊪ τ}
+  β-err1 : ∀{Γ τ}{t₁ : Γ ⊪ τ}{t₂ : Γ , ℕ´ ⊪ τ}
     → match error t₁ t₂ —→ error
+
+  β-err2 : ∀{Γ τ τ'}{t₁ : Γ ⊪ τ}
+    → app (error {Γ} {τ ⇒ τ'}) t₁ —→ error
+
+  β-err3 : ∀{Γ τ τ'}{t₁ : Γ ⊪ τ ⇒ τ'}
+    → Value t₁
+    → app t₁ error —→ error
+
+  β-err4 : ∀{Γ}
+    → suc´ (error {Γ} {ℕ´}) —→ error
 
 infix  2 _—↠_
 infix  1 begin_
@@ -86,15 +106,43 @@ https://github.com/gergoerdi/syntactic-stlc/blob/master/STLC/Norm.agda
 -}
 
 data Halts : ∀{Γ τ} → Γ ⊪ τ → Set where
-  halts : ∀{Γ τ}{t t' : Γ ⊪ τ} → Value t' → t —↠ t' → Halts t
+  halts : ∀{Γ τ}{t t' : Γ ⊪ τ} → NormalForm t' → t —↠ t' → Halts t
 
-values-halt : ∀{Γ τ}{t : Γ ⊪ τ} → Value t → Halts t
-values-halt v-zero     = halts v-zero (zero´ ∎)
-values-halt (v-suc vt) = halts (v-suc vt) (suc´ t ∎)
-values-halt v-abs      = halts v-abs (abs t ∎)
-values-halt v-err      = halts v-err (error ∎)
+nf-halts : ∀{Γ τ}{t : Γ ⊪ τ} → NormalForm t → Halts t
+nf-halts {t = t}      (value x) = halts (value x) (t ∎)
+nf-halts {t = .error}  nf-err   = halts nf-err (error ∎)
 
--- —↠-halts : ∀{Γ τ}(t₁ t₂ : Γ ⊪ τ) → t₁ —↠ t₂ → 
+NF : ∀ {a b} {A : Set a} → Rel A b → A → Set _
+NF next x = ∄ (next x)
+
+nf-¬-—→ : ∀{Γ τ t}{t' : Γ ⊪ τ} → NormalForm {Γ} {τ} t → ¬ (t —→ t')
+nf-¬-—→ (value v-zero) ()
+nf-¬-—→ (value v-abs)  ()
+nf-¬-—→  nf-err        ()
+nf-¬-—→ (value (v-suc x)) (ξ-suc y) = nf-¬-—→ (value x) y
+
+deterministic : ∀{Γ τ}{t₁ t₂ t₃ : Γ ⊪ τ} → t₁ —→ t₂ → t₁ —→ t₃ → t₂ ≡ t₃
+deterministic (ξ-1 x) (ξ-1 y) rewrite deterministic x y = refl
+deterministic (ξ-1 x) (ξ-2 x₁ y)     = ⊥-elim (nf-¬-—→ (value x₁) x)
+deterministic (ξ-1 x) (β-err3 x₁)    = ⊥-elim (nf-¬-—→ (value x₁) x)
+deterministic (ξ-2 x x₁) (ξ-1 y)     = ⊥-elim (nf-¬-—→ (value x) y)
+deterministic (ξ-2 x x₁) (ξ-2 x₂ y) rewrite deterministic x₁ y = refl
+deterministic (ξ-2 x x₁) (β-abs x₂)  = ⊥-elim (nf-¬-—→ (value x₂) x₁)
+deterministic (β-abs x) (ξ-2 x₁ y)   = ⊥-elim (nf-¬-—→ (value x) y)
+deterministic (β-abs x) (β-abs x₁)   = refl
+deterministic (ξ-suc x) (ξ-suc y) rewrite deterministic x y = refl
+deterministic (ξ-mtc x) (ξ-mtc y) rewrite deterministic x y = refl
+deterministic (ξ-mtc x) (β-suc x₁)   = ⊥-elim (nf-¬-—→ (value (v-suc x₁)) x)
+deterministic β-zero β-zero          = refl
+deterministic (β-suc x) (ξ-mtc y)    = ⊥-elim (nf-¬-—→ (value (v-suc x)) y)
+deterministic (β-suc x) (β-suc x₁)   = refl
+deterministic β-err1 β-err1          = refl
+deterministic β-err2 β-err2          = refl
+deterministic (β-err3 x) (ξ-1 y)     = ⊥-elim (nf-¬-—→ (value x) y)
+deterministic (β-err3 x) (β-err3 x₁) = refl
+deterministic β-err4 β-err4          = refl
+
+-- —↠-halts : ∀{Γ τ}(t₁ t₂ : Γ ⊪ τ) → t₁ —↠ t₂ →
 
 -- data Progress {A} (t₁ : ∅ ⊪ A) : Set where
 --   step : ∀ {t₂ : ∅ ⊪ A}
