@@ -17,17 +17,30 @@ open import L.Syntax
 ⊢-to-⊪ (app t t₁)      = app (⊢-to-⊪ t) (⊢-to-⊪ t₁)
 ⊢-to-⊪ (match t t₁ t₂) = match (⊢-to-⊪ t) (⊢-to-⊪ t₁) (⊢-to-⊪ t₂)
 
--- call-elimination : ∀{Γ τ τ₁}{t : Γ ⊢ τ} → τ₁ called-in t → Γ ⊪ τ
--- call-elimination {t = .(var _)}    call-var = error
--- call-elimination {t = .(abs _)}   (call-abs c) = abs (call-elimination c)
--- call-elimination {t = .(suc´ _)}  (call-suc c) = suc´ (call-elimination c)
--- call-elimination {t = app _ t₂}   (call-app1 c _) = app (call-elimination c) (⊢-to-⊪ t₂)
--- call-elimination {t = app t₁ _}   (call-app2 _ c) = app (⊢-to-⊪ t₁) (call-elimination c)
--- call-elimination {t = .(app _ _)} (call-app12 c c₁) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match1 c x x₁) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match2 x c x₁) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match3 x x₁ c) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match12 c c₁ x) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match13 c x c₁) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match23 x c c₁) = {!   !}
--- call-elimination {t = .(match _ _ _)} (call-match123 c c₁ c₂) = {!   !}
+call-elimination : ∀{Γ τ τ₁}{t : Γ ⊢ τ} → τ₁ called-in t → Γ ⊪ τ
+call-elimination {t = .(var _)}    call-var
+  = error
+call-elimination {t = .(abs _)}   (call-abs c)
+  = abs (call-elimination c)
+call-elimination {t = .(suc´ _)}  (call-suc c)
+  = suc´ (call-elimination c)
+call-elimination {t = app _ t₂}   (call-app1 c _)
+  = app (call-elimination c) (⊢-to-⊪ t₂)
+call-elimination {t = app t₁ _}   (call-app2 _ c)
+  = app (⊢-to-⊪ t₁) (call-elimination c)
+call-elimination {t = .(app _ _)} (call-app12 c c₁)
+  = app (call-elimination c) (call-elimination c₁)
+call-elimination {t = match _ t₁ t₂} (call-match1 c _ _)
+  = match (call-elimination c) (⊢-to-⊪ t₁) (⊢-to-⊪ t₂)
+call-elimination {t = match t _ t₂} (call-match2 _ c _)
+  = match (⊢-to-⊪ t) (call-elimination c) (⊢-to-⊪ t₂)
+call-elimination {t = match t t₁ _} (call-match3 _ _ c)
+  = match (⊢-to-⊪ t) (⊢-to-⊪ t₁) (call-elimination c)
+call-elimination {t = match _ _ t₂} (call-match12 c c₁ _)
+  = match (call-elimination c) (call-elimination c₁) (⊢-to-⊪ t₂)
+call-elimination {t = match _ t₁ _} (call-match13 c _ c₁)
+  = match (call-elimination c) (⊢-to-⊪ t₁) (call-elimination c₁)
+call-elimination {t = match t _ _} (call-match23 _ c c₁)
+  = match (⊢-to-⊪ t) (call-elimination c) (call-elimination c₁)
+call-elimination {t = .(match _ _ _)} (call-match123 c c₁ c₂)
+  = match (call-elimination c) (call-elimination c₁) (call-elimination c₂)
