@@ -9,11 +9,12 @@ open import L.Syntax.Properties
 open import L.Semantics
 
 open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (∃; ∄; proj₁; proj₂) renaming (_,_ to _/\_)
+open import Data.Product using (∃; ∄; proj₁; proj₂; _×_) renaming (_,_ to _/\_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import Relation.Binary using (Rel)
 open import Relation.Nullary using (¬_)
 open import Data.Empty using (⊥-elim)
+open import Data.Unit using (⊤; tt)
 
 {-
 Tait's Normalization Proof as seen in Pierce (2002) and
@@ -58,15 +59,18 @@ deterministic (β-err3 x) (β-err3 x₁) = refl
 deterministic β-err4 β-err4          = refl
 
 mutual
-  data Saturated : ∀{τ} → ∅ ⊪ τ → Set where
-    sat : ∀{τ}{t : ∅ ⊪ τ} → Halts t → Saturated' _ t → Saturated t
+  Saturated : ∀{τ} → ∅ ⊪ τ → Set
+  Saturated t = Halts t × Saturated' _ t
 
-  data Saturated' : (τ : Type) → ∅ ⊪ τ → Set where
-    s-nat : ∀{t : ∅ ⊪ ℕ´} → Saturated' ℕ´ t
-    s-fun : ∀{τ₁ τ₂}{t : ∅ ⊪ τ₁ ⇒ τ₂} → ∀{e} → Saturated e → Saturated' (τ₂) (app t e)
+  Saturated' : ∀(τ : Type) → ∅ ⊪ τ → Set
+  Saturated' (τ₁ ⇒ τ₂) f  = ∀{e} → Saturated e → Saturated (app f e)
+  Saturated'  ℕ        _  = ⊤
+
+    -- s-nat : ∀{t : ∅ ⊪ ℕ´} → Saturated' ℕ´ t
+    -- s-fun : ∀{τ₁ τ₂}{t : ∅ ⊪ τ₁ ⇒ τ₂} → ∀{e} → Saturated e → Saturated' (τ₂) (app t e)
 
 sat-halts : ∀ {τ}{t : ∅ ⊪ τ} → Saturated t → Halts t
-sat-halts (sat h _) = h
+sat-halts = proj₁
 
 infix 0 _↔_
 record _↔_ (A B : Set) : Set where
@@ -85,3 +89,14 @@ open _↔_
 
 —→-halts : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Halts t ↔ Halts t'
 —→-halts x = record {to = —→-halts-→ x; from = —→-halts-← x}
+
+—→-saturated-→ : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t → Saturated t'
+—→-saturated-→ {ℕ´}      x (h /\ _)  = (—→-halts-→ x h) /\ tt
+—→-saturated-→ {τ₁ ⇒ τ₂} x (h /\ s)  = (—→-halts-→ x h) /\ λ e → —→-saturated-→ (ξ-1 x) (s e)
+
+—→-saturated-← : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t' → Saturated t
+—→-saturated-← {ℕ´}      x (h /\ _)  = (—→-halts-← x h) /\ tt
+—→-saturated-← {τ₁ ⇒ τ₂} x (h /\ s)  = (—→-halts-← x h) /\ λ e → —→-saturated-← (ξ-1 x) (s e)
+
+—→-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t ↔ Saturated t'
+—→-saturated x = record {to = —→-saturated-→ x; from = —→-saturated-← x}
