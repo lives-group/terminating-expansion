@@ -8,6 +8,7 @@ import Common.Context as Ctx
 open Ctx using (Context; _,_; _∈_; _⊆_; ∈-subs; keep; drop; ⊆-refl)
 open import R.Syntax.Base
 open import R.Syntax.Properties
+open import R.Syntax
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
@@ -107,4 +108,6 @@ expansion {t = t} c (gas (suc n))
   where
     IH = expansion c (gas n)
 
--- unroll : ∀{Γ τ n}{t : Γ ⊢ τ ⊚ ⇑}{c : }
+unroll : ∀{Γ τ n} → Fuel n → Γ ⊩ τ → Γ ⊩ τ
+unroll f (rec  t x) = rec (proj₁ (expansion x f)) (proj₁ (proj₂ (expansion x f)))
+unroll f (rec∙ t x) = rec∙ (unroll f t) x

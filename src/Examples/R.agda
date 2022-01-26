@@ -11,6 +11,7 @@ open import R.Syntax.Properties
 open import R.Syntax.IR
 open import R.Syntax.IR.Properties
 open import R.Syntax
+open import R.Syntax.Unrolling
 open import R.Semantics
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
@@ -68,3 +69,37 @@ loop = (rec {- loop -} (var {- loop -} here) call-var) ∙∙ zero´
 
 1+2≡3 : proj₂ (output (⊩-eval (gas 100) 1+2)) ≡ done (v-suc (v-suc (v-suc v-zero)))
 1+2≡3 = refl
+
+unr1f-1+2 : unroll (gas 1) 1+2 ≡
+  rec∙
+  (rec∙
+   (rec
+    (abs
+     (abs
+      (match (var (there here)) (var here)
+       (app
+        (app
+         (abs
+          (abs
+           (match (var (there here)) (var here)
+            (app
+             (app (var (there (there (there (there (there (there here)))))))
+              (var here))
+             (suc´ (var (there here)))))))
+         (var here))
+        (suc´ (var (there here)))))))
+    (call-abs
+     (call-abs
+      (call-match3 (no-call-var f≢ℕ) (no-call-var f≢ℕ)
+       (call-app1
+        (call-app1
+         (call-abs
+          (call-abs
+           (call-match3 (no-call-var f≢ℕ) (no-call-var f≢ℕ)
+            (call-app1 (call-app1 call-var (no-call-var f≢ℕ))
+             (no-call-suc (no-call-var f≢ℕ))))))
+         (no-call-var f≢ℕ))
+        (no-call-suc (no-call-var f≢ℕ)))))))
+   (suc´ zero´))
+  (suc´ (suc´ zero´))
+unr1f-1+2 = refl
