@@ -8,7 +8,6 @@ open import L.Syntax
 open import L.Syntax.Properties
 open import L.Semantics
 
-open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (∃; ∄; proj₁; proj₂; _×_) renaming (_,_ to _/\_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import Relation.Binary using (Rel)
