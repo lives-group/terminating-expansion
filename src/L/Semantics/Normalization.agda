@@ -82,7 +82,7 @@ mutual
 
   Saturated' : ∀(τ : Type) → ∅ ⊪ τ → Set
   Saturated' (τ₁ ⇒ τ₂) f  = ∀{e} → Saturated e → Saturated (app f e)
-  Saturated'  ℕ        _  = ⊤
+  Saturated'  ℕ´        _  = ⊤
 
     -- data Saturated : ∀{τ} → ∅ ⊪ τ → Set where
     --   s-nat : ∀{t : ∅ ⊪ ℕ´} → Saturated' ℕ´ t
