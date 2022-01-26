@@ -5,6 +5,36 @@ open import Common.Type using (Type; ℕ´; _⇒_)
 open import Common.Context using (Context; _,_; _∈_; here; there)
 open import L.Syntax
 
+
+data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊪ τ → Set where
+  no-call-err : ∀{Γ τ} 
+    → τ not-called-in (error {Γ} {τ})
+
+  no-call-zero : ∀{Γ τ}
+    → τ not-called-in (zero´ {Γ})
+
+  no-call-suc : ∀{Γ τ}{t : Γ ⊪ ℕ´}
+    → τ not-called-in t
+    → τ not-called-in suc´ t
+
+  no-call-var : ∀{Γ τ₁ τ₂}{τ∈Γ : τ₂ ∈ Γ}
+    → τ₁ not-called-in var τ∈Γ
+
+  no-call-app : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊪ τ₁ ⇒ τ₂}{t₂ : Γ ⊪ τ₁}
+    → τ not-called-in t₁
+    → τ not-called-in t₂
+    → τ not-called-in app t₁ t₂
+
+  no-call-abs : ∀{Γ τ τ₁ τ₂}{t : Γ , τ₁ ⊪ τ₂}
+    → τ not-called-in t
+    → τ not-called-in abs t
+
+  no-call-match : ∀{Γ τ₁ τ₂}{t₁ : Γ ⊪ ℕ´}{t₂ : Γ ⊪ τ₂}{t₃ : Γ , ℕ´ ⊪ τ₂}
+    → τ₁ not-called-in t₁
+    → τ₁ not-called-in t₂
+    → τ₁ not-called-in t₃
+    → τ₁ not-called-in match t₁ t₂ t₃
+
 {- plfa substitution properties -}
 ext : ∀ {Γ Δ}
   → (∀ {τ₁} → τ₁ ∈ Γ → τ₁ ∈ Δ)

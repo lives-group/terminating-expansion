@@ -9,6 +9,8 @@ open import R.Syntax.Properties
 open import R.Syntax.Unrolling
 open import L.Syntax
 
+open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
+
 ⊢-to-⊪ : ∀{Γ τ} → Γ ⊢ τ → Γ ⊪ τ
 ⊢-to-⊪  zero´          = zero´
 ⊢-to-⊪ (suc´ t)        = suc´ (⊢-to-⊪ t)
@@ -44,3 +46,10 @@ call-elimination {t = match t _ _} (call-match23 _ c c₁)
   = match (⊢-to-⊪ t) (call-elimination c) (call-elimination c₁)
 call-elimination {t = .(match _ _ _)} (call-match123 c c₁ c₂)
   = match (call-elimination c) (call-elimination c₁) (call-elimination c₂)
+
+
+
+-- -- Doesn't not perform unroll
+-- translate : ∀{τ} → ∅ ⊩ τ → ∅ ⊪ τ
+-- translate (rec t x)  = something (call-elimination x)
+-- translate (rec∙ t x) = app (translate t) (⊢-to-⊪ x)
