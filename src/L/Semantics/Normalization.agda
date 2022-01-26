@@ -15,7 +15,7 @@ open import Relation.Binary using (Rel)
 open import Relation.Nullary using (¬_)
 open import Data.Empty using (⊥-elim)
 open import Data.Unit using (⊤; tt)
-
+open import Function using (_∘_; id)
 {-
 Tait's Normalization Proof as seen in Pierce (2002) and
 https://github.com/gergoerdi/syntactic-stlc/blob/master/STLC/Norm.agda
@@ -100,3 +100,14 @@ open _↔_
 
 —→-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t ↔ Saturated t'
 —→-saturated x = record {to = —→-saturated-→ x; from = —→-saturated-← x}
+
+-- —↠-saturated-→ : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t → Saturated t'
+-- —↠-saturated-→ (_ ∎)          = id
+-- —↠-saturated-→ (_ —→⟨ x ⟩ x₁) = —↠-saturated-→ x₁ ∘ —→-saturated-→ x
+--
+-- —↠-saturated-← : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t' → Saturated t
+-- —↠-saturated-← (_ ∎)          = id
+-- —↠-saturated-← (z —→⟨ x ⟩ x₁) = —↠-saturated-← {!   !} ∘ —→-saturated-← {!   !}
+--
+-- —↠-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t ↔ Saturated t'
+-- —↠-saturated x = record { to = —↠-saturated-→ x ; from = —↠-saturated-← x}
