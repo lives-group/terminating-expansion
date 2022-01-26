@@ -44,11 +44,11 @@ sum = rec {- sum -}
            )
          )
       ) (call-abs (call-abs (call-match3
-                              (no-call-var f≢ℕ)
-                              (no-call-var f≢ℕ)
+                              (no-call-var)
+                              (no-call-var)
                               (call-app1
-                                (call-app1 call-var (no-call-var f≢ℕ))
-                                (no-call-suc (no-call-var f≢ℕ))))))
+                                (call-app1 call-var (no-call-var))
+                                (no-call-suc (no-call-var))))))
 
 
 
@@ -90,16 +90,16 @@ unr1f-1+2 : unroll (gas 1) 1+2 ≡
         (suc´ (var (there here)))))))
     (call-abs
      (call-abs
-      (call-match3 (no-call-var f≢ℕ) (no-call-var f≢ℕ)
+      (call-match3 (no-call-var) (no-call-var)
        (call-app1
         (call-app1
          (call-abs
           (call-abs
-           (call-match3 (no-call-var f≢ℕ) (no-call-var f≢ℕ)
-            (call-app1 (call-app1 call-var (no-call-var f≢ℕ))
-             (no-call-suc (no-call-var f≢ℕ))))))
-         (no-call-var f≢ℕ))
-        (no-call-suc (no-call-var f≢ℕ)))))))
+           (call-match3 (no-call-var) (no-call-var)
+            (call-app1 (call-app1 call-var (no-call-var))
+             (no-call-suc (no-call-var))))))
+         (no-call-var))
+        (no-call-suc (no-call-var)))))))
    (suc´ zero´))
   (suc´ (suc´ zero´))
 unr1f-1+2 = refl
