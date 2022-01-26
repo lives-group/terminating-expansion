@@ -23,6 +23,7 @@ data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊢ τ → Set where
     → τ not-called-in suc´ t
 
   no-call-var : ∀{Γ τ₁ τ₂}{τ∈Γ : τ₂ ∈ Γ}
+    → τ₁ ≢ τ₂
     → τ₁ not-called-in var τ∈Γ
 
   no-call-app : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊢ τ₁ ⇒ τ₂}{t₂ : Γ ⊢ τ₁}
@@ -123,7 +124,7 @@ no-call-subs : ∀{Γ Δ τ₁ τ₂}{t₁ : Γ ⊢ τ₂}
   → τ₁ not-called-in (⊆-subs Γ⊆Δ t₁)
 no-call-subs Γ⊆Δ no-call-zero    = no-call-zero
 no-call-subs Γ⊆Δ (no-call-suc c) = no-call-suc (no-call-subs Γ⊆Δ c)
-no-call-subs Γ⊆Δ (no-call-var)   = no-call-var 
+no-call-subs Γ⊆Δ (no-call-var x) = no-call-var x
 no-call-subs Γ⊆Δ (no-call-app c c₁)
   = no-call-app (no-call-subs Γ⊆Δ c) (no-call-subs Γ⊆Δ c₁)
 no-call-subs Γ⊆Δ (no-call-abs c)

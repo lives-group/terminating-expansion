@@ -5,9 +5,10 @@ open import Common.Type using (Type; ℕ´; _⇒_)
 open import Common.Context using (Context; _,_; _∈_; here; there)
 open import L.Syntax
 
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊪ τ → Set where
-  no-call-err : ∀{Γ τ} 
+  no-call-err : ∀{Γ τ}
     → τ not-called-in (error {Γ} {τ})
 
   no-call-zero : ∀{Γ τ}
@@ -18,6 +19,7 @@ data _not-called-in_ : ∀{Γ τ} → Type → Γ ⊪ τ → Set where
     → τ not-called-in suc´ t
 
   no-call-var : ∀{Γ τ₁ τ₂}{τ∈Γ : τ₂ ∈ Γ}
+    → τ₁ ≢ τ₂
     → τ₁ not-called-in var τ∈Γ
 
   no-call-app : ∀{Γ τ τ₁ τ₂}{t₁ : Γ ⊪ τ₁ ⇒ τ₂}{t₂ : Γ ⊪ τ₁}
