@@ -136,14 +136,16 @@ below are needed as well -}
 -- by Agda, but it is supposed to be the same. I don't know what is happening.
 -- Georgi proves them by using function composition. I tried to copy the strategy.
 
--- —↠-saturated-→ : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t → Saturated t'
--- —↠-saturated-→ (_ ∎)          = id
--- —↠-saturated-→ (_ —→⟨ x ⟩ x₁) = —↠-saturated-→ x₁ ∘ —→-saturated-→ x
---
+—↠-saturated-→ : ∀{τ}{t t' : _ ⊪ τ} → t —↠ t' → Saturated t → Saturated t'
+—↠-saturated-→ (_ ∎)          = id
+—↠-saturated-→ (_ —→⟨ x ⟩ x₁) = —↠-saturated-→ x₁ ∘ —→-saturated-→ x
+
 -- HERE IS WHERE THE ERROR COMES
--- —↠-saturated-← : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t' → Saturated t
--- —↠-saturated-← (_ ∎)          = id
--- —↠-saturated-← (z —→⟨ x ⟩ x₁) = —↠-saturated-← {! x₁  !} ∘ —→-saturated-← {! x  !}
---
--- —↠-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t ↔ Saturated t'
--- —↠-saturated x = record { to = —↠-saturated-→ x ; from = —↠-saturated-← x}
+—↠-saturated-← : ∀{τ}{t t' : _ ⊪ τ} → t —↠ t' → Saturated t' → Saturated t
+—↠-saturated-← (_ ∎)          = id
+—↠-saturated-← (Z —→⟨ x ⟩ x₁) st with —↠-saturated-← x₁ st
+...| k with —→-saturated-← x k
+...   | q = q
+
+—↠-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t ↔ Saturated t'
+—↠-saturated x = record { to = —↠-saturated-→ x ; from = —↠-saturated-← x}
