@@ -31,6 +31,10 @@ data _⊆_ : Context → Context → Set where
 ⊆-refl {∅}     = empty
 ⊆-refl {Γ , τ} = keep (⊆-refl)
 
+⊆-∅ : ∀{Γ} → ∅ ⊆ Γ
+⊆-∅ {∅}     = empty
+⊆-∅ {Γ , _} = drop ⊆-∅
+
 {-
 Contexts are foldable
 -}
