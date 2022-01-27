@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Transform.Translation where
 
 open import Common.Fuel
@@ -90,9 +92,11 @@ no-call-in-elimination (call-match123 c c₁ c₂)
   = no-call-match (no-call-in-elimination c)
     (no-call-in-elimination c₁) (no-call-in-elimination c₂)
 
-postulate translate : ∀{τ} → ∅ ⊩ τ → ∅ ⊪ τ
--- translate (rec t x)  = {! call-elimination x  !} -- (∅ , τ₁ ⇒ τ₂) != ∅ of type Context
--- translate (rec∙ t x) = app (translate t) (⊢-to-⊪ x)
+translate : ∀{τ} → ∅ ⊩ τ → ∃ (λ Δ → Δ ⊪ τ)
+translate (rec {_} {τ₁} {τ₂} t x)
+  = (∅ , τ₁ ⇒ τ₂) /\ (call-elimination x)
+translate (rec∙ t x)
+  = (proj₁ (translate t)) /\ app (proj₂ (translate t)) (⊢-to-⊪ (⊆-subs ⊆-∅ x))
 
-transform : ∀{τ n} → Fuel n → ∅ ⊩ τ → ∅ ⊪ τ
+transform : ∀{τ n} → Fuel n → ∅ ⊩ τ → ∃ (λ Δ → Δ ⊪ τ)
 transform f t = translate (unroll f t)

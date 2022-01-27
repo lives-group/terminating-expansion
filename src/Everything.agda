@@ -30,6 +30,9 @@ open import L.Syntax
 open import L.Syntax.Properties
 open import L.Semantics
 
+open import Transform.Translation
+
 open import Examples.Context
 open import Examples.R
 open import Examples.L
+open import Examples.Translation
