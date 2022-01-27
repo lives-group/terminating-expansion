@@ -15,51 +15,49 @@ open import Data.Product using (proj₁; proj₂)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 -- This is term expected when transforming term `1+2` from Examples.R
--- with gas 3. Notice l-term is not closed.
-l-term : ∅ , ℕ´ ⇒ ℕ´ ⇒ ℕ´ ⊪ ℕ´
+-- with gas 3. Notice l-term has an additional app, because of closure.
+l-term : ∅ ⊪ ℕ´
 l-term = app
           (app
-           (abs
+           (app
             (abs
-             (match (var (there here)) (var here)
-              (app
-               (app
-                (abs
-                 (abs
-                  (match (var (there here)) (var here)
-                   (app
-                    (app
-                     (abs
-                      (abs
-                       (match (var (there here)) (var here)
-                        (app
-                         (app
-                          (abs
-                           (abs
-                            (match (var (there here)) (var here)
-                             (app (app error (var here)) (suc´ (var (there here)))))))
-                          (var here))
-                         (suc´ (var (there here)))))))
-                     (var here))
-                    (suc´ (var (there here)))))))
-                (var here))
-               (suc´ (var (there here)))))))
+             (abs
+              (abs
+               (match (var (there here)) (var here)
+                (app
+                 (app
+                  (abs
+                   (abs
+                    (match (var (there here)) (var here)
+                     (app
+                      (app
+                       (abs
+                        (abs
+                         (match (var (there here)) (var here)
+                          (app
+                           (app
+                            (abs
+                             (abs
+                              (match (var (there here)) (var here)
+                               (app (app error (var here)) (suc´ (var (there here)))))))
+                            (var here))
+                           (suc´ (var (there here)))))))
+                       (var here))
+                      (suc´ (var (there here)))))))
+                  (var here))
+                 (suc´ (var (there here))))))))
+            (abs {τ₁ = ℕ´} (abs {τ₁ = ℕ´} zero´)))
            (suc´ zero´))
           (suc´ (suc´ zero´))
 
 -- The result of transformation
-tr-term : ∅ , ℕ´ ⇒ ℕ´ ⇒ ℕ´ ⊪ ℕ´
-tr-term = proj₂ (transform (gas 3) 1+2)
+tr-term : ∅ ⊪ ℕ´
+tr-term = transform (gas 3) 1+2
 
 -- It is as expected
 _ : tr-term ≡ l-term
 _ = refl
 
--- Since l-term is not closed, we can perform a closure
--- prior to evaluating it
-l-term1 : ∅ ⊪ ℕ´
-l-term1 = app (abs tr-term) (abs (abs zero´))
-
 -- The evalation of the closure yields the expected result
-_ : proj₁ (output (⊪-eval (gas 100) l-term1)) ≡ suc´ (suc´ (suc´ zero´))
+_ : proj₁ (output (⊪-eval (gas 100) tr-term)) ≡ suc´ (suc´ (suc´ zero´))
 _ = refl

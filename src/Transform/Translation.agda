@@ -92,11 +92,23 @@ no-call-in-elimination (call-match123 c c₁ c₂)
   = no-call-match (no-call-in-elimination c)
     (no-call-in-elimination c₁) (no-call-in-elimination c₂)
 
-translate : ∀{τ} → ∅ ⊩ τ → ∃ (λ Δ → Δ ⊪ τ)
-translate (rec {_} {τ₁} {τ₂} t x)
-  = (∅ , τ₁ ⇒ τ₂) /\ (call-elimination x)
-translate (rec∙ t x)
-  = (proj₁ (translate t)) /\ app (proj₂ (translate t)) (⊢-to-⊪ (⊆-subs ⊆-∅ x))
+trivial-term : ∀{Γ} (τ : Type) → Γ ⊪ τ
+trivial-term  ℕ´      = zero´
+trivial-term (τ ⇒ τ₁) = abs (trivial-term τ₁)
 
-transform : ∀{τ n} → Fuel n → ∅ ⊩ τ → ∃ (λ Δ → Δ ⊪ τ)
+closure : ∀{τ₁ τ₂} → ∅ , τ₁ ⊪ τ₂ → ∅ ⊪ τ₂
+closure {τ₁} {τ₂} t = app (abs t) (trivial-term τ₁)
+
+translate : ∀{τ} → ∅ ⊩ τ → ∅ ⊪ τ
+translate (rec t x)  = closure (call-elimination x)
+translate (rec∙ t x) = app (translate t) (⊢-to-⊪ x)
+
+-- Alternative translation, if you don't want closure or closed terms
+translate' : ∀{τ} → ∅ ⊩ τ → ∃ (λ Δ → Δ ⊪ τ)
+translate' (rec {_} {τ₁} {τ₂} t x)
+  = (∅ , τ₁ ⇒ τ₂) /\ (call-elimination x)
+translate' (rec∙ t x)
+  = (proj₁ (translate' t)) /\ app (proj₂ (translate' t)) (⊢-to-⊪ (⊆-subs ⊆-∅ x))
+
+transform : ∀{τ n} → Fuel n → ∅ ⊩ τ → ∅ ⊪ τ
 transform f t = translate (unroll f t)
