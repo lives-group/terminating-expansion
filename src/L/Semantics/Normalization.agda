@@ -3,7 +3,7 @@
 module L.Semantics.Normalization where
 
 open import Common.Type using (Type; ℕ´; _⇒_)
-open import Common.Context using (Context; _,_; _∈_; here; there; ∅)
+open import Common.Context using (Context; _,_; _∈_; here; there; ∅; _⊆_; ⊆-refl; ⊆-wk)
 open import L.Syntax
 open import L.Syntax.Properties
 open import L.Semantics
@@ -37,7 +37,7 @@ nf-halts : ∀{Γ τ}{t : Γ ⊪ τ} → NormalForm t → Halts t
 nf-halts {t = t}      (value x) = halts (value x) (t ∎)
 nf-halts {t = .error}  nf-err   = halts nf-err (error ∎)
 
--- This is the defitinion of NormalForm used on georgi's repo, ignore it
+-- This is the defitinion of NormalForm used on georgi's repo
 -- NF : ∀ {a b} {A : Set a} → Rel A b → A → Set _
 -- NF next x = ∄ (next x)
 
@@ -71,28 +71,27 @@ deterministic (β-err3 x) (β-err3 x₁) = refl
 deterministic β-err4 β-err4          = refl
 
 {-
-This definition of Saturated is from georgi's repo. I don't really understand it
-but the definition I tried, commented below, is accused to be not strictly positive
-by Agda.
+This definition of Saturated is from georgi's repo.
 -}
 mutual
   Saturated : ∀{τ} → ∅ ⊪ τ → Set
   Saturated t = Halts t × Saturated' _ t
 
   Saturated' : ∀(τ : Type) → ∅ ⊪ τ → Set
-  Saturated' (τ₁ ⇒ τ₂) f  = ∀{e} → Saturated e → Saturated (app f e)
+  Saturated' (τ₁ ⇒ τ₂) f   = ∀{e} → Saturated e → Saturated (app f e)
   Saturated'  ℕ´        _  = ⊤
 
-    -- data Saturated : ∀{τ} → ∅ ⊪ τ → Set where
-    --   s-nat : ∀{t : ∅ ⊪ ℕ´} → Saturated' ℕ´ t
-    --   s-fun : ∀{τ₁ τ₂}{t : ∅ ⊪ τ₁ ⇒ τ₂} → ∀{e} → Saturated e → Saturated' (τ₂) (app t e)
 
--- A saturated term halts. Trivial, because it is part of the definition.
+-- not strictly positive
+-- data Saturated : ∀{τ} → ∅ ⊪ τ → Set where
+--   s-nat : ∀{t : ∅ ⊪ ℕ´} → Saturated' ℕ´ t
+--   s-fun : ∀{τ₁ τ₂}{t : ∅ ⊪ τ₁ ⇒ τ₂} → ∀{e} → Saturated e → Saturated' (τ₂) (app t e)
+
+-- A saturated term halts. Trivial, it is part of the definition.
 sat-halts : ∀ {τ}{t : ∅ ⊪ τ} → Saturated t → Halts t
 sat-halts = proj₁
 
--- My own definition for biconditional because georgi uses some deep stuff from
--- the standard library
+-- My own definition for biconditional
 infix 0 _↔_
 record _↔_ (A B : Set) : Set where
   field
@@ -114,10 +113,6 @@ open _↔_
 —→-halts : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Halts t ↔ Halts t'
 —→-halts x = record {to = —→-halts-→ x; from = —→-halts-← x}
 
-{- Those proofs are needed for proving a lot of lemmas in which georgi
-finally gets to normalize. I don't even know what is happening. The proofs
-below are needed as well -}
-
 -- The evaluation relation preserves saturation (-->)
 —→-saturated-→ : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t → Saturated t'
 —→-saturated-→ {ℕ´}      x (h /\ _)  = (—→-halts-→ x h) /\ tt
@@ -132,20 +127,68 @@ below are needed as well -}
 —→-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —→ t' → Saturated t ↔ Saturated t'
 —→-saturated x = record {to = —→-saturated-→ x; from = —→-saturated-← x}
 
--- The closure also preserves saturation. The proof for (<--) is not accepted
--- by Agda, but it is supposed to be the same. I don't know what is happening.
--- Georgi proves them by using function composition. I tried to copy the strategy.
-
+-- The refl and trans closure also preserves saturation (-->)
 —↠-saturated-→ : ∀{τ}{t t' : _ ⊪ τ} → t —↠ t' → Saturated t → Saturated t'
 —↠-saturated-→ (_ ∎)          = id
 —↠-saturated-→ (_ —→⟨ x ⟩ x₁) = —↠-saturated-→ x₁ ∘ —→-saturated-→ x
 
--- HERE IS WHERE THE ERROR COMES
+-- The refl and trans closure also preserves saturation (<--)
 —↠-saturated-← : ∀{τ}{t t' : _ ⊪ τ} → t —↠ t' → Saturated t' → Saturated t
 —↠-saturated-← (_ ∎)          = id
 —↠-saturated-← (Z —→⟨ x ⟩ x₁) st with —↠-saturated-← x₁ st
 ...| k with —→-saturated-← x k
 ...   | q = q
 
+-- The refl and trans closure also preserves saturation (<-->)
 —↠-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t ↔ Saturated t'
 —↠-saturated x = record { to = —↠-saturated-→ x ; from = —↠-saturated-← x}
+
+-- Don't know what this is for. Just copying. TODO: understand.
+data _⊢⋆_ (Γ : Context) : Context → Set where
+  ∅´   : Γ ⊢⋆ ∅
+  _,,_ : ∀ {τ Δ} → Γ ⊢⋆ Δ → Γ ⊪ τ → Γ ⊢⋆ (Δ , τ)
+
+-- Already have these on L.Syntax.Properties as lemma for substitution
+-- but this one uses this datatype
+sub-var : ∀{Γ Δ τ} → Γ ⊢⋆ Δ → τ ∈ Δ → Γ ⊪ τ
+sub-var (σ ,, τ) here      = τ
+sub-var (σ ,, τ) (there e) = sub-var σ e
+
+⊆-⊢⋆ : ∀{Γ₁ Γ₂ Δ} → Γ₁ ⊆ Γ₂ → Γ₁ ⊢⋆ Δ → Γ₂ ⊢⋆ Δ
+⊆-⊢⋆ ope ∅´        = ∅´
+⊆-⊢⋆ ope (x ,, x₁) = ⊆-⊢⋆ ope x ,, ⊆-subs ope x₁
+
+shift : ∀ {τ Γ Δ} → Γ ⊢⋆ Δ → (Γ , τ) ⊢⋆ (Δ , τ)
+shift σ = ⊆-⊢⋆ ⊆-wk σ ,, var here
+
+⊢⋆-refl : ∀{Γ} → Γ ⊢⋆ Γ
+⊢⋆-refl {∅}     = ∅´
+⊢⋆-refl {Γ , x} = shift ⊢⋆-refl
+
+sub : ∀ {Γ Δ τ} → Γ ⊢⋆ Δ → Δ ⊪ τ → Γ ⊪ τ
+sub σ (var x)         = sub-var σ x
+sub σ (abs t)         = abs (sub (shift σ) t)
+sub σ (app f t)       = app (sub σ f) (sub σ t)
+sub σ zero´           = zero´
+sub σ (suc´ t)        = suc´ (sub σ t)
+sub σ (match t t₁ t₂) = match (sub σ t) (sub σ t₁) (sub (shift σ) t₂)
+sub σ error           = error
+
+-- Don't know what this is for. Just copying. TODO: understand.
+data Instantiation : ∀ {Γ} → ∅ ⊢⋆ Γ → Set where
+  ∅´   : Instantiation ∅´
+  _,,_ : ∀ {Γ t σ}
+    → Instantiation {Γ} σ
+    → ∀ {e} → Value {_} {t} e × Saturated e → Instantiation (σ ,, e)
+
+-- saturation of variables
+saturate-var : ∀ {Γ σ} → Instantiation σ → ∀ {τ} (x : τ ∈ Γ) → Saturated (sub-var σ x)
+saturate-var (_ ,, (_ /\ sat)) here     = sat
+saturate-var (env ,, _)       (there e) = saturate-var env e
+
+-- -- TODO: saturation of applications
+-- app-lam* : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
+--   → t₁ —↠ t₂
+--   → Value t₂
+--   → ∀ {t} (f : _ ⊪ t) → app (abs {τ₁ = τ} f) t₁ —↠ sub (⊢⋆-refl ,, t₂) f
+-- app-lam* t₁—↠t₂ v f = {!   !} -- gmap _ (appʳ (lam _ _)) steps  ◅◅ app-lam f v ◅ ε

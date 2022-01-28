@@ -2,7 +2,7 @@
 module L.Syntax.Properties where
 
 open import Common.Type using (Type; ℕ´; _⇒_)
-open import Common.Context using (Context; _,_; _∈_; here; there)
+open import Common.Context using (Context; _,_; _∈_; here; there; _⊆_; ∈-subs; keep)
 open import L.Syntax
 
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
@@ -80,3 +80,12 @@ subs-lemma : ∀ {Γ τ₁ τ₂} → Γ , τ₂ ⊪ τ₁ → Γ ⊪ τ₂ → 
 subs-lemma {Γ} {τ₁} {τ₂} t₁ t₂
   = subst {Γ , τ₂} {Γ} (λ {here → t₂ ; (there x) → var x}) {τ₁} t₁
 {- end of plfa substitution properties -}
+
+⊆-subs : ∀ {Γ Δ τ} → Γ ⊆ Δ → Γ ⊪ τ → Δ ⊪ τ
+⊆-subs Γ⊆Δ error           = error
+⊆-subs Γ⊆Δ zero´           = zero´
+⊆-subs Γ⊆Δ (suc´ t)        = suc´ (⊆-subs Γ⊆Δ t)
+⊆-subs Γ⊆Δ (var x)         = var (∈-subs Γ⊆Δ x)
+⊆-subs Γ⊆Δ (abs t)         = abs (⊆-subs (keep Γ⊆Δ) t)
+⊆-subs Γ⊆Δ (app t t₁)      = app (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁)
+⊆-subs Γ⊆Δ (match t t₁ t₂) = match (⊆-subs Γ⊆Δ t) (⊆-subs Γ⊆Δ t₁) (⊆-subs (keep Γ⊆Δ) t₂)

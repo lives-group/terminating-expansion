@@ -35,6 +35,9 @@ data _⊆_ : Context → Context → Set where
 ⊆-∅ {∅}     = empty
 ⊆-∅ {Γ , _} = drop ⊆-∅
 
+⊆-wk : ∀{Γ τ} → Γ ⊆ Γ , τ
+⊆-wk = drop ⊆-refl
+
 {-
 Contexts are foldable
 -}
