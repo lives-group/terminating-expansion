@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module L.Semantics.Definitional where
 
 open import Common.Type
@@ -49,3 +51,6 @@ eval {τ = τ ⇒ τ₁} (match t t₁ t₂) env
 ... | inj₁ zero                    = eval t₁ env
 ... | inj₁ (suc n)                 = eval t₂ ((inj₁ n) /\ env)
 ... | inj₂ _                       = inj₂ tt
+
+∅-eval : ∀{τ} → ∅ ⊪ τ → T⟦ τ ⟧
+∅-eval t = eval t tt

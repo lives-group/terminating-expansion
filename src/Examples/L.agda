@@ -8,10 +8,12 @@ open import Common.Context using (Context; _,_; _∈_; here; there; ∅)
 open import L.Syntax
 open import L.Syntax.Properties
 open import L.Semantics
+open import L.Semantics.Definitional
 
 -- open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (∃; ∄; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
+open import Data.Sum using (inj₁)
 -- open import Relation.Binary using (Rel)
 -- open import Relation.Nullary using (¬_)
 -- open import Data.Empty using (⊥-elim)
@@ -43,3 +45,6 @@ sum1f = abs {- x -}(abs {- y -}
 
 4+1≡err : proj₁ (output (⊪-eval (gas 100) 4+1)) ≡ error
 4+1≡err = refl
+
+_ : ∅-eval 1+1 ≡ inj₁ 2
+_ = refl
