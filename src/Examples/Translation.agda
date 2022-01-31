@@ -10,9 +10,12 @@ open import Examples.R
 open import R.Syntax
 open import L.Syntax
 open import L.Semantics
+open import L.Semantics.Definitional
 
 open import Data.Product using (proj₁; proj₂)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Data.Nat using (ℕ; suc)
+open import Data.Sum using (inj₁)
 
 -- This is term expected when transforming term `1+2` from Examples.R
 -- with gas 3. Notice l-term has an additional app, because of closure.
@@ -60,4 +63,7 @@ _ = refl
 
 -- The evalation of the closure yields the expected result
 _ : proj₁ (output (⊪-eval (gas 100) tr-term)) ≡ suc´ (suc´ (suc´ zero´))
+_ = refl
+
+_ : ∅-eval (transform (gas 3) 1+2) ≡ inj₁ 3
 _ = refl

@@ -10,7 +10,7 @@ open import R.Syntax
 open import R.Syntax.Properties
 open import R.Syntax.Unrolling
 open import L.Syntax
-open import L.Syntax.Properties renaming (_not-called-in_ to _n-c_)
+open import L.Syntax.Properties renaming (_not-called-in_ to _n-c_) hiding (⊆-subs)
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)

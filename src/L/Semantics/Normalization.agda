@@ -176,8 +176,8 @@ sub σ (suc´ t)        = suc´ (sub σ t)
 sub σ (match t t₁ t₂) = match (sub σ t) (sub σ t₁) (sub (shift σ) t₂)
 sub σ error           = error
 
-sub-refl : ∀{Γ τ}(t : Γ ⊪ τ) → sub ⊢⋆-refl t ≡ t
-sub-refl t = ?
+-- sub-refl : ∀{Γ τ}(t : Γ ⊪ τ) → sub ⊢⋆-refl t ≡ t
+-- sub-refl t = {!   !}
 
 ⊢⋆-trans : ∀{Γ₁ Γ₂ Δ} → Γ₁ ⊢⋆ Γ₂ → Γ₂ ⊢⋆ Δ → Γ₁ ⊢⋆ Δ
 ⊢⋆-trans _ ∅´ = ∅´
@@ -195,17 +195,17 @@ saturate-var : ∀ {Γ σ} → Instantiation σ → ∀ {τ} (x : τ ∈ Γ) →
 saturate-var (_ ,, (_ /\ sat)) here     = sat
 saturate-var (env ,, _)       (there e) = saturate-var env e
 
--- applications result in substitution
-—↠-sub-app : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
-  → t₁ —↠ t₂
-  → Value t₂
-  → ∀ {t} (f : _ ⊪ t) → app (abs {τ₁ = τ} f) t₁ —↠ sub (⊢⋆-refl ,, t₂) f
-—↠-sub-app t₁—↠t₂ v f = {!   !}
-
--- As Gergo puts it:
--- "It basically states that you can push in outer arguments before the innermost one.
--- Should this be called some kind of constant propagation?"
-innermost-last : ∀ {Γ τ} (σ : ∅ ⊢⋆ Γ) (t : ∅ ⊪ τ) → ⊢⋆-trans (∅ ,, t) (⊆-⊢⋆ ⊆-wk σ) ≡ σ
-innermost-last  ∅       t = refl
-innermost-last (σ , t') t
-  rewrite innermost-last σ t | sym (sub-⊢⋆⊇ (∅ , t) ⊆-wk e) | sub-refl t' = refl
+-- -- applications result in substitution
+-- —↠-sub-app : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
+--   → t₁ —↠ t₂
+--   → Value t₂
+--   → ∀ {t} (f : _ ⊪ t) → app (abs {τ₁ = τ} f) t₁ —↠ sub (⊢⋆-refl ,, t₂) f
+-- —↠-sub-app t₁—↠t₂ v f = {!   !}
+--
+-- -- As Gergo puts it:
+-- -- "It basically states that you can push in outer arguments before the innermost one.
+-- -- Should this be called some kind of constant propagation?"
+-- innermost-last : ∀ {Γ τ} (σ : ∅ ⊢⋆ Γ) (t : ∅ ⊪ τ) → ⊢⋆-trans (∅ ,, t) (⊆-⊢⋆ ⊆-wk σ) ≡ σ
+-- innermost-last  ∅       t = refl
+-- innermost-last (σ , t') t
+--   rewrite innermost-last σ t | sym (sub-⊢⋆⊇ (∅ , t) ⊆-wk e) | sub-refl t' = refl

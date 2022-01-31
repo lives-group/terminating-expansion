@@ -29,6 +29,7 @@ open import R.Semantics
 open import L.Syntax
 open import L.Syntax.Properties
 open import L.Semantics
+open import L.Semantics.Definitional
 
 open import Transform.Translation
 
