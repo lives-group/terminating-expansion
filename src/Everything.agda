@@ -25,6 +25,7 @@ open import R.Syntax.Properties
 open import R.Syntax.Unrolling
 open import R.Syntax
 open import R.Semantics
+open import R.Semantics.Definitional
 
 open import L.Syntax
 open import L.Syntax.Properties
