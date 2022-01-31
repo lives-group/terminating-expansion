@@ -37,7 +37,14 @@ eval' (match t t₁ t₂) env
 ... | zero                = eval' t₁ env
 ... | (suc n)             = eval' t₂ (n /\ env)
 
--- eval : ∀{Γ τ n} → Fuel n → Γ ⊩ τ → C⟦ Γ ⟧ → Maybe T⟦ τ ⟧
--- eval (gas zero)     t _   = nothing
--- eval (gas (suc f)) (rec t x)  env = {!   !}
--- eval (gas (suc f)) (rec∙ t x) env = {!   !}
+eval : ∀{Γ τ n} → Fuel n → Γ ⊩ τ → C⟦ Γ ⟧ → Maybe T⟦ τ ⟧
+eval (gas zero)     t         _   = nothing
+eval (gas (suc f)) (rec t x)  env with eval (gas f) (rec t x) env
+... | just z  = just (eval' t (z /\ env))
+... | nothing = {!   !}
+eval (gas (suc f)) (rec∙ t x) env with eval (gas (suc f)) t env
+... | just z  = just (z (eval' x env))
+... | nothing = nothing
+
+∅-eval : ∀{τ n} → Fuel n → ∅ ⊩ τ → Maybe T⟦ τ ⟧
+∅-eval f t = eval f t tt

@@ -13,6 +13,7 @@ open import R.Syntax.IR.Properties
 open import R.Syntax
 open import R.Syntax.Unrolling
 open import R.Semantics
+open import R.Semantics.Definitional
 
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc; _+_)

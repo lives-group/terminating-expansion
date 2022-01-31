@@ -64,6 +64,3 @@ _ = refl
 -- The evalation of the closure yields the expected result
 _ : proj₁ (output (⊪-eval (gas 100) tr-term)) ≡ suc´ (suc´ (suc´ zero´))
 _ = refl
-
-_ : ∅-eval (transform (gas 3) 1+2) ≡ inj₁ 3
-_ = refl
