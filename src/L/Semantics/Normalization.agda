@@ -143,7 +143,8 @@ open _↔_
 —↠-saturated : ∀{τ}{t t' : ∅ ⊪ τ} → t —↠ t' → Saturated t ↔ Saturated t'
 —↠-saturated x = record { to = —↠-saturated-→ x ; from = —↠-saturated-← x}
 
--- Don't know what this is for. Just copying. TODO: understand.
+-- A relation from Georgo which seems to store types of terms that are
+-- typable in some context
 data _⊢⋆_ (Γ : Context) : Context → Set where
   ∅´   : Γ ⊢⋆ ∅
   _,,_ : ∀ {τ Δ} → Γ ⊢⋆ Δ → Γ ⊪ τ → Γ ⊢⋆ (Δ , τ)
@@ -165,6 +166,7 @@ shift σ = ⊆-⊢⋆ ⊆-wk σ ,, var here
 ⊢⋆-refl {∅}     = ∅´
 ⊢⋆-refl {Γ , x} = shift ⊢⋆-refl
 
+-- substitution using above mentioned relation
 sub : ∀ {Γ Δ τ} → Γ ⊢⋆ Δ → Δ ⊪ τ → Γ ⊪ τ
 sub σ (var x)         = sub-var σ x
 sub σ (abs t)         = abs (sub (shift σ) t)
@@ -174,7 +176,14 @@ sub σ (suc´ t)        = suc´ (sub σ t)
 sub σ (match t t₁ t₂) = match (sub σ t) (sub σ t₁) (sub (shift σ) t₂)
 sub σ error           = error
 
--- Don't know what this is for. Just copying. TODO: understand.
+sub-refl : ∀{Γ τ}(t : Γ ⊪ τ) → sub ⊢⋆-refl t ≡ t
+sub-refl t = ?
+
+⊢⋆-trans : ∀{Γ₁ Γ₂ Δ} → Γ₁ ⊢⋆ Γ₂ → Γ₂ ⊢⋆ Δ → Γ₁ ⊢⋆ Δ
+⊢⋆-trans _ ∅´ = ∅´
+⊢⋆-trans Γ⊢⋆Γ (Γ⊢⋆Δ ,, t) = ⊢⋆-trans Γ⊢⋆Γ Γ⊢⋆Δ ,, sub Γ⊢⋆Γ t
+
+-- An environment of saturated-value terms
 data Instantiation : ∀ {Γ} → ∅ ⊢⋆ Γ → Set where
   ∅´   : Instantiation ∅´
   _,,_ : ∀ {Γ t σ}
@@ -186,9 +195,17 @@ saturate-var : ∀ {Γ σ} → Instantiation σ → ∀ {τ} (x : τ ∈ Γ) →
 saturate-var (_ ,, (_ /\ sat)) here     = sat
 saturate-var (env ,, _)       (there e) = saturate-var env e
 
--- -- TODO: saturation of applications
--- app-lam* : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
---   → t₁ —↠ t₂
---   → Value t₂
---   → ∀ {t} (f : _ ⊪ t) → app (abs {τ₁ = τ} f) t₁ —↠ sub (⊢⋆-refl ,, t₂) f
--- app-lam* t₁—↠t₂ v f = {!   !} -- gmap _ (appʳ (lam _ _)) steps  ◅◅ app-lam f v ◅ ε
+-- applications result in substitution
+—↠-sub-app : ∀ {Γ τ} {t₁ t₂ : Γ ⊪ τ}
+  → t₁ —↠ t₂
+  → Value t₂
+  → ∀ {t} (f : _ ⊪ t) → app (abs {τ₁ = τ} f) t₁ —↠ sub (⊢⋆-refl ,, t₂) f
+—↠-sub-app t₁—↠t₂ v f = {!   !}
+
+-- As Gergo puts it:
+-- "It basically states that you can push in outer arguments before the innermost one.
+-- Should this be called some kind of constant propagation?"
+innermost-last : ∀ {Γ τ} (σ : ∅ ⊢⋆ Γ) (t : ∅ ⊪ τ) → ⊢⋆-trans (∅ ,, t) (⊆-⊢⋆ ⊆-wk σ) ≡ σ
+innermost-last  ∅       t = refl
+innermost-last (σ , t') t
+  rewrite innermost-last σ t | sym (sub-⊢⋆⊇ (∅ , t) ⊆-wk e) | sub-refl t' = refl
