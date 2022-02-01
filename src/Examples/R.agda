@@ -18,6 +18,7 @@ open import R.Semantics.Definitional
 open import Data.Product using (∃; proj₁; proj₂) renaming (_,_ to _/\_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
+open import Data.Sum using (inj₁)
 
 infixl 20 _∙_
 _∙_ : ∀{Γ τ₁ τ₂} → Γ ⊢ τ₁ ⇒ τ₂ → Γ ⊢ τ₁ → Γ ⊢ τ₂
@@ -108,3 +109,6 @@ unr1f-1+2 : unroll (gas 1) 1+2 ≡
    (suc´ zero´))
   (suc´ (suc´ zero´))
 unr1f-1+2 = refl
+
+_ : ∅-eval (gas 5) 1+2 ≡ inj₁ 3
+_ = refl
